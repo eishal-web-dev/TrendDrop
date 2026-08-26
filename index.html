@@ -197,6 +197,63 @@
   .score-fill.neg{background:linear-gradient(90deg, #ff3d3d, #ff8a3d);}
   .score-val{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); width:32px; text-align:right;}
 
+  .action-row{display:flex; gap:8px; margin-top:20px;}
+  .action-btn{
+    flex:1; background:var(--void-2); border:1px solid var(--card-line); color:var(--text);
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13px; padding:13px 8px; border-radius:14px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:7px; transition:border-color .15s ease, background .15s ease;
+  }
+  .action-btn:hover{border-color:var(--purple);}
+  .action-btn.saved{border-color:var(--acid); color:var(--acid); background:rgba(201,255,61,0.08);}
+  .action-btn.share-btn{width:100%;}
+  .reroll-note{text-align:center; font-size:11px; color:var(--muted-2); margin-top:9px; font-family:'JetBrains Mono',monospace;}
+
+  .comp-badge{
+    display:inline-flex; align-items:center; gap:6px; background:rgba(201,255,61,0.1); border:1px solid rgba(201,255,61,0.3);
+    color:var(--acid); font-size:11px; font-weight:700; font-family:'JetBrains Mono',monospace; letter-spacing:0.04em;
+    padding:5px 11px; border-radius:100px; margin-bottom:14px; margin-left:6px;
+  }
+
+  /* SAVED IDEAS */
+  .saved-panel{margin-top:26px;}
+  .saved-panel.hidden{display:none;}
+  .saved-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:0 4px;}
+  .saved-head span{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase;}
+  .saved-count{color:var(--acid) !important;}
+  .saved-item{
+    background:var(--card); border:1px solid var(--card-line); border-radius:14px; padding:13px 16px;
+    display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px;
+  }
+  .saved-item-title{font-size:13.5px; font-weight:600; line-height:1.3;}
+  .saved-item-meta{font-size:11px; color:var(--muted-2); font-family:'JetBrains Mono',monospace; margin-top:3px;}
+  .saved-remove{background:none; border:none; color:var(--muted-2); cursor:pointer; font-size:16px; padding:4px 8px; flex-shrink:0;}
+  .saved-remove:hover{color:var(--pink);}
+  .saved-empty{color:var(--muted-2); font-size:13px; text-align:center; padding:20px 0; font-family:'Inter',sans-serif;}
+
+  /* BOARD */
+  .board-toggle{
+    display:block; margin:14px auto 0; background:none; border:1px solid var(--card-line); color:var(--muted);
+    padding:11px 22px; border-radius:100px; cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:12px;
+    letter-spacing:0.03em;
+  }
+  .board-toggle:hover{border-color:var(--purple); color:var(--text);}
+  .board-panel{display:none; margin-top:20px;}
+  .board-panel.active{display:block;}
+  .board-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  @media(max-width:480px){.board-grid{grid-template-columns:1fr;}}
+  .board-cell{
+    background:var(--card); border:1px solid var(--card-line); border-radius:14px; padding:12px 14px; cursor:pointer;
+    transition:border-color .15s ease;
+  }
+  .board-cell:hover{border-color:var(--pink);}
+  .board-cell.active{border-color:var(--acid); background:rgba(201,255,61,0.06);}
+  .board-cell-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;}
+  .board-cell-niche{font-size:12.5px; font-weight:600;}
+  .board-cell-growth{font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--acid);}
+  .board-cell-plat{font-size:10.5px; color:var(--muted-2); font-family:'JetBrains Mono',monospace;}
+  .board-cell.locked .board-cell-niche{filter:blur(3px); opacity:0.6;}
+  .board-cell.locked{cursor:default;}
+
   .share-btn{
     margin-top:20px; width:100%; background:var(--void-2); border:1px solid var(--card-line); color:var(--text);
     font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px; padding:13px; border-radius:14px; cursor:pointer;
@@ -353,7 +410,7 @@
 
     <div class="card">
       <div class="card-inner">
-        <div class="trend-badge" id="growthBadge">▲ RISING</div>
+        <div class="trend-badge" id="growthBadge">▲ RISING</div><span class="comp-badge" id="compBadge" style="display:none;">💎 LOW COMPETITION</span>
         <div class="trend-title" id="trendTitle"></div>
 
         <div class="why-now">
@@ -392,11 +449,31 @@
           <div id="scoreRows"></div>
         </div>
 
+        <div class="action-row">
+          <button class="action-btn" id="rerollBtn" onclick="rerollAngle()">🔀 Different angle</button>
+          <button class="action-btn" id="saveBtn" onclick="toggleSave()">⭐ Save</button>
+          <button class="action-btn" onclick="copyFullScript()">📋 Copy all</button>
+        </div>
+        <div class="reroll-note" id="rerollNote">1 free reroll today · Pro gets unlimited angles</div>
+
         <button class="share-btn" onclick="openShare()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 12V20H20V12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 6L12 2L8 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 2V15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           Share today's trend
         </button>
       </div>
+    </div>
+
+    <button class="board-toggle" onclick="toggleBoard()" id="boardToggle">🗂 Browse today's full board (36 combos) ▾</button>
+    <div class="board-panel" id="boardPanel">
+      <div class="board-grid" id="boardGrid"></div>
+    </div>
+
+    <div class="saved-panel hidden" id="savedPanel">
+      <div class="saved-head">
+        <span>⭐ Saved ideas</span>
+        <span class="saved-count" id="savedCount" style="font-family:'JetBrains Mono',monospace; font-size:11px;"></span>
+      </div>
+      <div id="savedList"></div>
     </div>
 
     <div class="locked-wrap active">
@@ -980,14 +1057,41 @@
     }, 1650);
   });
 
+  let sessionCount = 0;
+  let savedIdeas = [];
+  let rerollsUsedToday = 0;
+  const FREE_REROLLS = 1;
+  const FREE_SAVES = 3;
+
+  const HOOK_TEMPLATES = [
+    d => d.hook,
+    d => `"Wait — ${d.trend.toLowerCase()} is moving faster than most people realize…"`,
+    d => `"If you're not making content about ${d.trend.toLowerCase()} yet, you're already behind…"`,
+    d => `"Nobody's covering ${d.trend.toLowerCase()} the right way. Here's how…"`
+  ];
+  const CAPTION_TEMPLATES = [
+    d => d.caption,
+    d => `Everyone's about to be talking about this. Get in early: ${d.trend.toLowerCase()}.`,
+    d => `Saving you the scroll — here's the ${d.trend.toLowerCase()} thing, explained fast.`
+  ];
+
   function renderResult(region, niche, platform){
     const data = (NICHE_DATA[niche] && NICHE_DATA[niche].platforms[platform]) || NICHE_DATA["Tech / AI"].platforms["TikTok"];
+    window._angleIdx = 0;
+    window._niche = niche; window._platform = platform; window._region = region;
 
     $('growthBadge').textContent = "▲ " + data.growth.toUpperCase();
     $('trendTitle').textContent = "\u201c" + data.trend + "\u201d";
     $('whyNow').innerHTML = data.why.replace(/(\+?\d+%)/, '<b>$1</b>') + (region !== "Global" ? ` <b>· ${region}</b>` : '');
     $('videoIdea').textContent = data.idea;
     $('hook').textContent = data.hook;
+
+    $('compBadge').style.display = (data.score.comp <= 25 && data.score.growth >= 75) ? 'inline-flex' : 'none';
+
+    sessionCount++;
+    $('streak').textContent = `🔥 ${sessionCount} idea${sessionCount>1?'s':''} pulled this session · come back tomorrow for a new drop`;
+    updateSaveBtn();
+    renderBoard();
 
     $('structure').innerHTML = data.structure.map((s,i) => {
       const labels = ["HOOK","BODY","CTA"];
@@ -1018,6 +1122,132 @@
 
     window._currentTrend = data;
     window._currentRegion = region;
+  }
+
+  function rerollAngle(){
+    const data = window._currentTrend;
+    if(!data) return;
+    if(rerollsUsedToday >= FREE_REROLLS){
+      showToast('Free reroll used — Pro gets unlimited angles');
+      return;
+    }
+    window._angleIdx = (window._angleIdx + 1) % HOOK_TEMPLATES.length;
+    const hIdx = window._angleIdx % HOOK_TEMPLATES.length;
+    const cIdx = window._angleIdx % CAPTION_TEMPLATES.length;
+    $('hook').textContent = HOOK_TEMPLATES[hIdx](data);
+    $('caption').textContent = CAPTION_TEMPLATES[cIdx](data);
+    rerollsUsedToday++;
+    $('rerollNote').textContent = rerollsUsedToday >= FREE_REROLLS
+      ? "Free reroll used today · Pro gets unlimited angles"
+      : "1 free reroll today · Pro gets unlimited angles";
+    showToast('New angle generated');
+  }
+
+  function ideaKey(){
+    return `${window._niche}__${window._platform}`;
+  }
+
+  function updateSaveBtn(){
+    const key = ideaKey();
+    const isSaved = savedIdeas.some(s => s.key === key);
+    $('saveBtn').classList.toggle('saved', isSaved);
+    $('saveBtn').innerHTML = isSaved ? '⭐ Saved' : '⭐ Save';
+  }
+
+  function toggleSave(){
+    const data = window._currentTrend;
+    if(!data) return;
+    const key = ideaKey();
+    const existingIdx = savedIdeas.findIndex(s => s.key === key);
+    if(existingIdx > -1){
+      savedIdeas.splice(existingIdx, 1);
+      showToast('Removed from saved');
+    } else {
+      if(savedIdeas.length >= FREE_SAVES){
+        showToast(`Free plan saves up to ${FREE_SAVES} — Pro saves unlimited`);
+        return;
+      }
+      savedIdeas.push({key, trend:data.trend, niche:window._niche, platform:window._platform});
+      showToast('Saved — find it below');
+    }
+    updateSaveBtn();
+    renderSavedPanel();
+  }
+
+  function removeSaved(key){
+    savedIdeas = savedIdeas.filter(s => s.key !== key);
+    renderSavedPanel();
+    updateSaveBtn();
+  }
+
+  function renderSavedPanel(){
+    const panel = $('savedPanel');
+    if(savedIdeas.length === 0){
+      panel.classList.add('hidden');
+      return;
+    }
+    panel.classList.remove('hidden');
+    $('savedCount').textContent = `${savedIdeas.length}/${FREE_SAVES} free`;
+    $('savedList').innerHTML = savedIdeas.map(s => `
+      <div class="saved-item">
+        <div>
+          <div class="saved-item-title">${s.trend}</div>
+          <div class="saved-item-meta">${s.niche} · ${s.platform}</div>
+        </div>
+        <button class="saved-remove" onclick="removeSaved('${s.key}')">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function copyFullScript(){
+    const data = window._currentTrend;
+    if(!data) return;
+    const block = [
+      `TREND: ${data.trend}`,
+      `WHY NOW: ${data.why}`,
+      `VIDEO: ${data.idea}`,
+      `HOOK: ${$('hook').textContent}`,
+      `STRUCTURE: ${data.structure.join(' → ')}`,
+      `CAPTION: ${$('caption').textContent}`,
+      `HASHTAGS: ${data.hashtags}`,
+      `BEST PLATFORM: ${data.platform}`
+    ].join('\n\n');
+    navigator.clipboard.writeText(block).catch(()=>{});
+    showToast('Full script copied to clipboard');
+  }
+
+  function toggleBoard(){
+    const panel = $('boardPanel');
+    const isActive = panel.classList.toggle('active');
+    $('boardToggle').textContent = isActive
+      ? "🗂 Hide full board ▴"
+      : "🗂 Browse today's full board (36 combos) ▾";
+    if(isActive) renderBoard();
+  }
+
+  function renderBoard(){
+    const grid = $('boardGrid');
+    if(!grid) return;
+    let html = '';
+    Object.keys(NICHE_DATA).forEach(niche => {
+      Object.keys(NICHE_DATA[niche].platforms).forEach(platform => {
+        const d = NICHE_DATA[niche].platforms[platform];
+        const isActive = (niche === window._niche && platform === window._platform);
+        html += `
+          <div class="board-cell ${isActive ? 'active' : 'locked'}" onclick="${isActive ? '' : `boardLockedClick()`}">
+            <div class="board-cell-top">
+              <span class="board-cell-niche">${isActive ? d.trend : niche}</span>
+              <span class="board-cell-growth">${d.growth.replace(' today','')}</span>
+            </div>
+            <div class="board-cell-plat">${platform}${isActive ? ' · unlocked today' : ' · 🔒 Pro'}</div>
+          </div>`;
+      });
+    });
+    grid.innerHTML = html;
+  }
+
+  function boardLockedClick(){
+    showToast('Unlock all 36 with Pro — $4.99/mo');
   }
 
   function copyText(id){
