@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrendDrop — What should I post today?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0a0a12;
+    --void-2:#111120;
+    --card:#14141f;
+    --card-line:#242438;
+    --text:#f5f3ff;
+    --muted:#8d8da3;
+    --muted-2:#5c5c72;
+    --pink:#ff3d8a;
+    --orange:#ff8a3d;
+    --purple:#8b3dff;
+    --acid:#c9ff3d;
+    --grad: linear-gradient(115deg, var(--pink) 0%, var(--orange) 45%, var(--purple) 100%);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--void);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  /* ambient background blobs */
+  .blob{
+    position:fixed; border-radius:50%; filter:blur(90px); opacity:0.35; z-index:0; pointer-events:none;
+    animation: drift 22s ease-in-out infinite alternate;
+  }
+  .blob1{width:520px;height:520px; background:var(--pink); top:-180px; left:-120px;}
+  .blob2{width:480px;height:480px; background:var(--purple); bottom:-200px; right:-140px; animation-delay:-8s;}
+  .blob3{width:360px;height:360px; background:var(--orange); top:40%; left:60%; animation-delay:-14s; opacity:0.2;}
+  @keyframes drift{
+    0%{transform:translate(0,0) scale(1);}
+    100%{transform:translate(40px,-30px) scale(1.08);}
+  }
+
+  .wrap{position:relative; z-index:1; max-width:720px; margin:0 auto; padding:32px 20px 100px;}
+
+  nav{display:flex; align-items:center; justify-content:space-between; margin-bottom:56px;}
+  .logo{display:flex; align-items:center; gap:9px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; letter-spacing:-0.02em;}
+  .logo-dot{width:11px; height:11px; border-radius:50%; background:var(--grad); flex-shrink:0;}
+  .pro-pill{
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.06em; color:var(--void);
+    background:var(--acid); padding:6px 12px; border-radius:100px; font-weight:700; cursor:pointer;
+    border:none;
+  }
+
+  /* HERO */
+  .hero{text-align:center; margin-bottom:36px;}
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:7px; font-family:'JetBrains Mono',monospace;
+    font-size:12px; color:var(--acid); letter-spacing:0.08em; margin-bottom:18px;
+  }
+  .eyebrow::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--acid); animation:pulse-dot 1.6s ease-in-out infinite;}
+  @keyframes pulse-dot{0%,100%{opacity:1;} 50%{opacity:.3;}}
+  h1{
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:clamp(34px,7vw,54px);
+    line-height:1.02; letter-spacing:-0.03em; text-transform:uppercase;
+    background:var(--grad); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    margin-bottom:10px;
+  }
+  .sub{color:var(--muted); font-size:15px; max-width:420px; margin:0 auto;}
+
+  /* SELECTORS */
+  .selectors{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:32px 0 16px;}
+  .select-pill{position:relative;}
+  select{
+    appearance:none; -webkit-appearance:none;
+    background:var(--card); border:1px solid var(--card-line); color:var(--text);
+    font-family:'Inter',sans-serif; font-size:14px; font-weight:500;
+    padding:13px 38px 13px 16px; border-radius:100px; cursor:pointer;
+    transition:border-color .15s ease;
+  }
+  select:hover, select:focus{border-color:var(--pink); outline:none;}
+  .select-pill::after{
+    content:'▾'; position:absolute; right:16px; top:50%; transform:translateY(-50%);
+    color:var(--muted); font-size:11px; pointer-events:none;
+  }
+
+  .cta-row{display:flex; justify-content:center; margin:26px 0 6px;}
+  .cta{
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; letter-spacing:0.01em;
+    color:var(--void); background:var(--grad); border:none; padding:17px 34px; border-radius:100px;
+    cursor:pointer; display:flex; align-items:center; gap:10px; text-transform:uppercase;
+    box-shadow:0 8px 30px -8px rgba(255,61,138,0.5);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .cta:hover{transform:translateY(-2px); box-shadow:0 12px 36px -8px rgba(255,61,138,0.65);}
+  .cta:active{transform:translateY(0);}
+  .cta:disabled{opacity:0.6; cursor:default; transform:none;}
+  .streak{text-align:center; color:var(--muted-2); font-size:12px; margin-top:14px; font-family:'JetBrains Mono',monospace;}
+
+  /* LOADING */
+  .loading{display:none; flex-direction:column; align-items:center; gap:18px; padding:70px 0 40px;}
+  .loading.active{display:flex;}
+  .ring{
+    width:64px; height:64px; border-radius:50%;
+    background:conic-gradient(var(--pink), var(--orange), var(--purple), var(--pink));
+    animation:spin 1s linear infinite; position:relative;
+  }
+  .ring::after{content:''; position:absolute; inset:6px; background:var(--void); border-radius:50%;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-text{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--muted); letter-spacing:0.02em;}
+
+  /* RESULT */
+  .result{display:none; margin-top:14px; animation:rise .5s ease both;}
+  .result.active{display:block;}
+  @keyframes rise{from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:translateY(0);}}
+
+  .result-label{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; padding:0 4px;
+  }
+  .result-label span:first-child{
+    font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase;
+  }
+  .date-tag{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted-2);}
+
+  .card{
+    background:var(--card); border-radius:24px; padding:2px; position:relative;
+    background:linear-gradient(var(--card), var(--card)) padding-box, var(--grad) border-box;
+    border:1px solid transparent;
+  }
+  .card-inner{padding:26px 24px 24px;}
+
+  .trend-badge{
+    display:inline-flex; align-items:center; gap:6px; background:rgba(255,61,138,0.12);
+    border:1px solid rgba(255,61,138,0.3); color:var(--pink); font-size:11px; font-weight:700;
+    font-family:'JetBrains Mono',monospace; letter-spacing:0.06em; padding:5px 11px; border-radius:100px; margin-bottom:14px;
+  }
+  .trend-title{
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; line-height:1.15; letter-spacing:-0.01em;
+    margin-bottom:14px;
+  }
+
+  .why-now{
+    display:flex; align-items:center; gap:12px; background:var(--void-2); border-radius:14px; padding:12px 14px; margin-bottom:20px;
+  }
+  .spark{width:34px; height:34px; flex-shrink:0;}
+  .why-now-text{font-size:13px; color:var(--muted); line-height:1.4;}
+  .why-now-text b{color:var(--acid); font-weight:600;}
+
+  .section-label{
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.08em; color:var(--muted-2);
+    text-transform:uppercase; margin:20px 0 8px;
+  }
+  .section-label:first-of-type{margin-top:0;}
+
+  .idea-box{font-size:16px; font-weight:600; line-height:1.4;}
+  .hook-box{
+    font-size:15px; font-style:italic; color:var(--text); line-height:1.5; border-left:2px solid var(--pink); padding-left:12px;
+  }
+
+  .structure{display:flex; flex-direction:column; gap:6px;}
+  .structure-step{display:flex; align-items:baseline; gap:10px; font-size:14px; color:var(--muted);}
+  .structure-step b{
+    font-family:'JetBrains Mono',monospace; color:var(--orange); font-size:12px; min-width:52px; flex-shrink:0;
+  }
+
+  .copy-box{
+    background:var(--void-2); border-radius:12px; padding:12px 14px; font-size:13.5px; color:var(--muted);
+    position:relative; line-height:1.5; font-family:'Inter',sans-serif;
+  }
+  .copy-btn{
+    position:absolute; top:10px; right:10px; background:var(--card-line); color:var(--text); border:none;
+    font-family:'JetBrains Mono',monospace; font-size:10px; padding:5px 9px; border-radius:7px; cursor:pointer; letter-spacing:0.04em;
+  }
+  .copy-btn:hover{background:var(--pink);}
+  .hashtags{color:var(--purple); font-family:'JetBrains Mono',monospace; font-size:12.5px;}
+
+  .meta-row{display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;}
+  .meta-chip{
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text); background:var(--void-2);
+    border:1px solid var(--card-line); padding:7px 12px; border-radius:100px; display:flex; align-items:center; gap:6px;
+  }
+
+  /* SCORE BREAKDOWN — signature element */
+  .score-panel{margin-top:22px; padding-top:18px; border-top:1px solid var(--card-line);}
+  .score-title{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.08em; color:var(--muted-2); text-transform:uppercase; margin-bottom:12px; display:flex; justify-content:space-between;}
+  .score-title b{color:var(--acid);}
+  .score-row{display:flex; align-items:center; gap:10px; margin-bottom:7px;}
+  .score-row-label{font-size:11.5px; color:var(--muted); width:108px; flex-shrink:0; font-family:'JetBrains Mono',monospace;}
+  .score-track{flex:1; height:6px; background:var(--void-2); border-radius:100px; overflow:hidden;}
+  .score-fill{height:100%; border-radius:100px; background:var(--grad);}
+  .score-fill.neg{background:linear-gradient(90deg, #ff3d3d, #ff8a3d);}
+  .score-val{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); width:32px; text-align:right;}
+
+  .share-btn{
+    margin-top:20px; width:100%; background:var(--void-2); border:1px solid var(--card-line); color:var(--text);
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px; padding:13px; border-radius:14px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px; transition:border-color .15s ease;
+  }
+  .share-btn:hover{border-color:var(--purple);}
+
+  /* LOCKED TEASER */
+  .locked-wrap{display:none; margin-top:26px; position:relative;}
+  .locked-wrap.active{display:block;}
+  .locked-stack{position:relative; height:150px; overflow:hidden; border-radius:20px;}
+  .locked-card{
+    background:var(--card); border:1px solid var(--card-line); border-radius:16px; padding:16px 18px;
+    position:absolute; left:0; right:0; filter:blur(5px); opacity:0.55;
+  }
+  .locked-card:nth-child(1){top:0;}
+  .locked-card:nth-child(2){top:52px; opacity:0.35;}
+  .locked-card:nth-child(3){top:100px; opacity:0.2;}
+  .locked-fade{
+    position:absolute; inset:0; background:linear-gradient(180deg, transparent 0%, var(--void) 92%);
+  }
+  .unlock-cta{
+    position:absolute; bottom:-6px; left:0; right:0; text-align:center; z-index:2;
+  }
+  .unlock-btn{
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13.5px; color:var(--void);
+    background:var(--acid); border:none; padding:13px 24px; border-radius:100px; cursor:pointer;
+    text-transform:uppercase; letter-spacing:0.01em;
+  }
+  .unlock-sub{font-size:11.5px; color:var(--muted-2); margin-top:10px; font-family:'JetBrains Mono',monospace;}
+
+  /* PRICING */
+  .pricing{margin-top:80px;}
+  .pricing-head{text-align:center; margin-bottom:28px;}
+  .pricing-head h2{
+    font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; letter-spacing:-0.01em; margin-bottom:6px;
+  }
+  .pricing-head p{color:var(--muted); font-size:13.5px;}
+  .plans{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media(max-width:520px){.plans{grid-template-columns:1fr;}}
+  .plan{background:var(--card); border:1px solid var(--card-line); border-radius:20px; padding:22px;}
+  .plan.pro{background:linear-gradient(var(--card), var(--card)) padding-box, var(--grad) border-box; border:1.5px solid transparent; position:relative;}
+  .plan-tag{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.08em; color:var(--acid); margin-bottom:10px; text-transform:uppercase;}
+  .plan-name{font-family:'Space Grotesk',sans-serif; font-size:17px; font-weight:700; margin-bottom:4px;}
+  .plan-price{font-family:'JetBrains Mono',monospace; font-size:26px; font-weight:700; margin-bottom:16px;}
+  .plan-price span{font-size:12px; color:var(--muted); font-weight:400;}
+  .plan ul{list-style:none;}
+  .plan li{font-size:13px; color:var(--muted); padding:6px 0; display:flex; gap:8px; align-items:flex-start;}
+  .plan li::before{content:'—'; color:var(--muted-2); flex-shrink:0;}
+  .plan.pro li::before{content:'—'; color:var(--pink);}
+  .plan.pro li{color:var(--text);}
+
+  footer{text-align:center; margin-top:60px; color:var(--muted-2); font-size:12px; font-family:'JetBrains Mono',monospace;}
+
+  /* SHARE MODAL */
+  .modal-bg{
+    display:none; position:fixed; inset:0; background:rgba(5,5,10,0.75); backdrop-filter:blur(6px);
+    z-index:50; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-bg.active{display:flex;}
+  .share-card{
+    width:100%; max-width:340px; aspect-ratio:4/5; border-radius:28px; padding:28px;
+    background:radial-gradient(circle at 20% 15%, rgba(255,61,138,0.5), transparent 55%),
+               radial-gradient(circle at 85% 85%, rgba(139,61,255,0.5), transparent 55%), var(--void);
+    display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden;
+    border:1px solid var(--card-line);
+  }
+  .share-card .logo{font-size:14px;}
+  .share-card-body{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; line-height:1.2; margin:auto 0;}
+  .share-card-footer{font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--muted); letter-spacing:0.04em;}
+  .modal-close{
+    display:block; margin:18px auto 0; background:none; border:1px solid var(--card-line); color:var(--muted);
+    padding:10px 20px; border-radius:100px; cursor:pointer; font-family:'Inter',sans-serif; font-size:13px;
+  }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); opacity:0;
+    background:var(--card); border:1px solid var(--card-line); color:var(--text); font-size:13px;
+    padding:11px 20px; border-radius:100px; z-index:60; transition:all .25s ease; pointer-events:none;
+    font-family:'Inter',sans-serif;
+  }
+  .toast.active{opacity:1; transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<div class="blob blob3"></div>
+
+<div class="wrap">
+  <nav>
+    <div class="logo"><span class="logo-dot"></span>TrendDrop</div>
+    <button class="pro-pill">GO PRO</button>
+  </nav>
+
+  <div class="hero">
+    <div class="eyebrow">LIVE TREND ENGINE · UPDATED TODAY</div>
+    <h1>What should<br>I post today?</h1>
+    <p class="sub">Pick your region, niche, and platform. We scan what's rising right now and hand you one ready-to-film idea — free.</p>
+  </div>
+
+  <div class="selectors">
+    <div class="select-pill">
+      <select id="region">
+        <option>📍 United States</option>
+        <option>📍 United Kingdom</option>
+        <option>📍 India</option>
+        <option>📍 Pakistan</option>
+        <option>📍 Global</option>
+      </select>
+    </div>
+    <div class="select-pill">
+      <select id="niche">
+        <option>🎯 Tech / AI</option>
+        <option>🎯 Fitness</option>
+        <option>🎯 Personal Finance</option>
+        <option>🎯 Beauty</option>
+        <option>🎯 Food</option>
+        <option>🎯 Gaming</option>
+      </select>
+    </div>
+    <div class="select-pill">
+      <select id="platform">
+        <option>📱 TikTok</option>
+        <option>📱 Instagram Reels</option>
+        <option>📱 YouTube Shorts</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="cta-row">
+    <button class="cta" id="findBtn">Find today's trend →</button>
+  </div>
+  <div class="streak" id="streak">🔥 3-day streak · come back tomorrow for a new drop</div>
+
+  <div class="loading" id="loading">
+    <div class="ring"></div>
+    <div class="loading-text" id="loadingText">scanning search velocity…</div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="result-label">
+      <span>🔥 Your video for today</span>
+      <span class="date-tag" id="dateTag"></span>
+    </div>
+
+    <div class="card">
+      <div class="card-inner">
+        <div class="trend-badge" id="growthBadge">▲ RISING</div>
+        <div class="trend-title" id="trendTitle"></div>
+
+        <div class="why-now">
+          <svg class="spark" viewBox="0 0 24 24" fill="none"><path d="M3 17L9 11L13 15L21 6" stroke="#c9ff3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 6H21V12" stroke="#c9ff3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="why-now-text" id="whyNow"></div>
+        </div>
+
+        <div class="section-label">Make this video</div>
+        <div class="idea-box" id="videoIdea"></div>
+
+        <div class="section-label">Hook</div>
+        <div class="hook-box" id="hook"></div>
+
+        <div class="section-label">30-sec structure</div>
+        <div class="structure" id="structure"></div>
+
+        <div class="section-label">Caption</div>
+        <div class="copy-box" id="captionBox">
+          <span id="caption"></span>
+          <button class="copy-btn" onclick="copyText('caption')">COPY</button>
+        </div>
+
+        <div class="section-label">Hashtags</div>
+        <div class="copy-box" id="hashtagBox">
+          <span class="hashtags" id="hashtags"></span>
+          <button class="copy-btn" onclick="copyText('hashtags')">COPY</button>
+        </div>
+
+        <div class="meta-row">
+          <div class="meta-chip" id="bestPlatform">📱 Best on TikTok</div>
+          <div class="meta-chip" id="freshChip">🕐 Fresh for ~48h</div>
+        </div>
+
+        <div class="score-panel">
+          <div class="score-title">Trend score breakdown <b id="scoreTotal"></b></div>
+          <div id="scoreRows"></div>
+        </div>
+
+        <button class="share-btn" onclick="openShare()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 12V20H20V12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 6L12 2L8 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 2V15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Share today's trend
+        </button>
+      </div>
+    </div>
+
+    <div class="locked-wrap active">
+      <div class="locked-stack">
+        <div class="locked-card"><div class="trend-badge" style="margin-bottom:8px;">▲ RISING</div><div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px;">Low-competition idea #2</div></div>
+        <div class="locked-card"><div class="trend-badge" style="margin-bottom:8px;">▲ RISING</div><div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px;">Low-competition idea #3</div></div>
+        <div class="locked-card"><div class="trend-badge" style="margin-bottom:8px;">▲ RISING</div><div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px;">Low-competition idea #4</div></div>
+        <div class="locked-fade"></div>
+      </div>
+      <div class="unlock-cta">
+        <button class="unlock-btn">Unlock 14 more opportunities →</button>
+        <div class="unlock-sub">PRO · $4.99/mo · every region, every niche, full scripts</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pricing">
+    <div class="pricing-head">
+      <h2>Two ways to use it</h2>
+      <p>Come back daily for free. Go Pro when one idea a day isn't enough.</p>
+    </div>
+    <div class="plans">
+      <div class="plan">
+        <div class="plan-tag">Free</div>
+        <div class="plan-name">Daily Drop</div>
+        <div class="plan-price">$0</div>
+        <ul>
+          <li>1 trend per day</li>
+          <li>1 region</li>
+          <li>Basic video idea + hook</li>
+        </ul>
+      </div>
+      <div class="plan pro">
+        <div class="plan-tag">Pro</div>
+        <div class="plan-name">Creator</div>
+        <div class="plan-price">$4.99<span>/mo</span></div>
+        <ul>
+          <li>10–20 trends per day</li>
+          <li>Every region + niche filters</li>
+          <li>Platform-specific ideas</li>
+          <li>Full scripts, hooks, captions, tags</li>
+          <li>Low-competition, high-growth picks</li>
+          <li>Save ideas + daily alerts</li>
+          <li>Trends before they peak</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <footer>TRENDDROP · A DAILY DROP, NOT A DASHBOARD</footer>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div>
+    <div class="share-card" id="shareCard">
+      <div class="logo"><span class="logo-dot"></span>TrendDrop</div>
+      <div class="share-card-body" id="shareCardText"></div>
+      <div class="share-card-footer">TODAY'S TREND · FOUND BY TRENDDROP<br><span id="shareCardDate"></span></div>
+    </div>
+    <button class="modal-close" onclick="closeShare()">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied</div>
+
+<script>
+  const NICHE_DATA = {
+    "Tech / AI": {
+      platforms: {
+        "TikTok": {
+          trend: "AI agents replacing repetitive office work",
+          growth: "+184% today",
+          why: "AI-agent searches and demo videos are climbing fast — most creators are still posting generic \"AI is trending\" content instead of specifics.",
+          idea: "\"3 jobs AI agents can already do for you\"",
+          hook: "\"You're probably still doing these 3 things manually…\"",
+          structure: ["Hook (0-3s)","3 examples (4-24s)","CTA (25-30s)"],
+          caption: "I let an AI agent handle these 3 tasks for a week. Here's what happened 👇",
+          hashtags: "#aiagents #productivity #futureofwork #aitools #workflow",
+          platform: "TikTok",
+          score: {growth:88, search:74, social:69, fresh:91, comp:22}
+        },
+        "Instagram Reels": {
+          trend: "\"AI wrapper\" apps going viral again",
+          growth: "+141% today",
+          why: "Reels tagged #buildinpublic are spiking as solo builders show AI-wrapped apps hitting real revenue.",
+          idea: "\"I built an AI app in one weekend — here's the exact stack\"",
+          hook: "\"This app made $340 in 4 days and it's just a ChatGPT wrapper…\"",
+          structure: ["Hook (0-3s)","Stack + demo (4-22s)","Result + CTA (23-30s)"],
+          caption: "Built this in a weekend. No code, just an API and a bit of stubbornness.",
+          hashtags: "#buildinpublic #aiapp #indiehacker #nocode #startup",
+          platform: "Instagram Reels",
+          score: {growth:79, search:66, social:81, fresh:85, comp:31}
+        },
+        "YouTube Shorts": {
+          trend: "Local AI models running on phones",
+          growth: "+112% today",
+          why: "On-device AI demos are getting unusually high watch-through on Shorts this week as new small models ship.",
+          idea: "\"This AI runs fully offline on your phone\"",
+          hook: "\"No internet. No cloud. This AI still works.\"",
+          structure: ["Hook (0-3s)","Live demo (4-25s)","Where to get it (26-30s)"],
+          caption: "Ran a full AI model with zero internet connection. Wild.",
+          hashtags: "#ondeviceai #localllm #aiapps #tech #shorts",
+          platform: "YouTube Shorts",
+          score: {growth:71, search:58, social:64, fresh:88, comp:18}
+        }
+      }
+    },
+    "Fitness": {
+      platforms: {
+        "TikTok": {
+          trend: "\"Silent workouts\" for apartment gyms",
+          growth: "+96% today",
+          why: "Low-noise, no-jump workout content is spiking as more people train in shared apartment buildings.",
+          idea: "\"5 silent exercises that still torch your legs\"",
+          hook: "\"My upstairs neighbor has no idea I just did leg day…\"",
+          structure: ["Hook (0-3s)","5 moves (4-25s)","CTA (26-30s)"],
+          caption: "Zero jumping. Zero noise complaints. Full burn.",
+          hashtags: "#apartmentworkout #silentworkout #legday #homefitness",
+          platform: "TikTok",
+          score: {growth:63, search:71, social:58, fresh:80, comp:27}
+        },
+        "Instagram Reels": {
+          trend: "12-3-30 treadmill variations",
+          growth: "+104% today",
+          why: "Creators are remixing the classic 12-3-30 with new inclines and speeds, and the remix videos are outperforming the originals.",
+          idea: "\"I tried the 15-3-45 treadmill trend for a week\"",
+          hook: "\"Everyone's doing 12-3-30 wrong now — here's the new version\"",
+          structure: ["Hook (0-3s)","Method + week result (4-24s)","CTA (25-30s)"],
+          caption: "Bumped the numbers up. My legs did not thank me.",
+          hashtags: "#treadmillworkout #cardio #fitnessjourney #walkingworkout",
+          platform: "Instagram Reels",
+          score: {growth:69, search:77, social:62, fresh:74, comp:34}
+        },
+        "YouTube Shorts": {
+          trend: "\"Grip strength\" longevity content",
+          growth: "+88% today",
+          why: "Grip-strength-as-longevity-marker content is crossing over from health podcasts into short-form.",
+          idea: "\"Your grip strength predicts how long you'll live\"",
+          hook: "\"Doctors are now testing this instead of your weight…\"",
+          structure: ["Hook (0-3s)","The science (4-20s)","How to test + train (21-30s)"],
+          caption: "One grip test tells you more than the scale does.",
+          hashtags: "#gripstrength #longevity #healthtips #strengthtraining",
+          platform: "YouTube Shorts",
+          score: {growth:58, search:69, social:55, fresh:82, comp:20}
+        }
+      }
+    },
+    "Personal Finance": {
+      platforms: {
+        "TikTok": {
+          trend: "\"Cash stuffing\" 2.0 with high-yield accounts",
+          growth: "+77% today",
+          why: "Budgeting creators are combining the visual satisfaction of cash stuffing with actual high-yield savings accounts.",
+          idea: "\"I cash-stuffed $500 but it's secretly earning 5%\"",
+          hook: "\"Cash stuffing but make it actually earn money…\"",
+          structure: ["Hook (0-3s)","The method (4-23s)","CTA (24-30s)"],
+          caption: "Same satisfying envelopes. Actual interest this time.",
+          hashtags: "#cashstuffing #budgeting #personalfinance #savingsmethod",
+          platform: "TikTok",
+          score: {growth:61, search:73, social:57, fresh:79, comp:29}
+        },
+        "Instagram Reels": {
+          trend: "\"Loud budgeting\" replacing quiet luxury",
+          growth: "+90% today",
+          why: "Creators are openly posting what they say no to, flipping the quiet-luxury trend into a savings flex.",
+          idea: "\"5 things I said no to this month (loud budgeting)\"",
+          hook: "\"I'm done pretending I can afford things I can't…\"",
+          structure: ["Hook (0-3s)","5 no's (4-24s)","What I said yes to instead (25-30s)"],
+          caption: "Loud budgeting > quiet luxury. Fight me.",
+          hashtags: "#loudbudgeting #moneytok #budgeting #financetips",
+          platform: "Instagram Reels",
+          score: {growth:68, search:75, social:70, fresh:83, comp:33}
+        },
+        "YouTube Shorts": {
+          trend: "First-job salary breakdowns",
+          growth: "+65% today",
+          why: "Gen Z salary transparency shorts are getting unusually high save-rates right now.",
+          idea: "\"My first job paid $52k — here's exactly where it went\"",
+          hook: "\"Nobody tells you what happens to your paycheck after tax…\"",
+          structure: ["Hook (0-3s)","Breakdown (4-25s)","Lesson learned (26-30s)"],
+          caption: "The gap between gross and 'actually spendable' is brutal.",
+          hashtags: "#salarybreakdown #firstjob #moneytips #genz",
+          platform: "YouTube Shorts",
+          score: {growth:54, search:62, social:60, fresh:76, comp:24}
+        }
+      }
+    },
+    "Beauty": {
+      platforms: {
+        "TikTok": {
+          trend: "\"Skin cycling\" for oily skin variations",
+          growth: "+83% today",
+          why: "Skin cycling content is being re-niched for specific skin types and outperforming the generic routine format.",
+          idea: "\"Skin cycling but for oily skin — my exact order\"",
+          hook: "\"Regular skin cycling broke my skin out. This didn't.\"",
+          structure: ["Hook (0-3s)","4-night routine (4-24s)","Results (25-30s)"],
+          caption: "Adjusted skin cycling for oily skin and it finally clicked.",
+          hashtags: "#skincycling #oilyskin #skincareroutine #skintok",
+          platform: "TikTok",
+          score: {growth:70, search:80, social:66, fresh:78, comp:36}
+        },
+        "Instagram Reels": {
+          trend: "\"Downturned brow lift\" makeup hacks",
+          growth: "+74% today",
+          why: "A specific brow-lift technique is trending after several creators posted before/afters this week.",
+          idea: "\"The 30-second brow trick that lifts your whole face\"",
+          hook: "\"This one brow move changed my entire makeup look…\"",
+          structure: ["Hook (0-3s)","Technique demo (4-22s)","Before/after (23-30s)"],
+          caption: "30 seconds. One brush. Whole face lift.",
+          hashtags: "#browlift #makeuphack #browtutorial #beautytok",
+          platform: "Instagram Reels",
+          score: {growth:64, search:70, social:73, fresh:75, comp:38}
+        },
+        "YouTube Shorts": {
+          trend: "Ingredient-led \"why it works\" explainers",
+          growth: "+69% today",
+          why: "Short science-style explainers on single ingredients are outperforming full routine videos this week.",
+          idea: "\"Niacinamide vs. Vitamin C — pick one, here's why\"",
+          hook: "\"You're probably using these two wrong together…\"",
+          structure: ["Hook (0-3s)","The science (4-22s)","What to actually do (23-30s)"],
+          caption: "You don't need both every day. Here's the real order.",
+          hashtags: "#niacinamide #vitaminc #skincareingredients #skintips",
+          platform: "YouTube Shorts",
+          score: {growth:57, search:66, social:59, fresh:80, comp:26}
+        }
+      }
+    },
+    "Food": {
+      platforms: {
+        "TikTok": {
+          trend: "\"Dinner in a jar\" meal prep",
+          growth: "+92% today",
+          why: "Layered jar meals are spiking as a low-effort meal-prep format that photographs unusually well.",
+          idea: "\"5 dinners in a jar for the whole work week\"",
+          hook: "\"I stopped cooking every night and started doing this…\"",
+          structure: ["Hook (0-3s)","5 jars (4-25s)","CTA (26-30s)"],
+          caption: "Prepped once, ate well all week. Jars > containers.",
+          hashtags: "#mealprep #dinnerinajar #easyrecipes #foodtok",
+          platform: "TikTok",
+          score: {growth:73, search:78, social:64, fresh:84, comp:30}
+        },
+        "Instagram Reels": {
+          trend: "One-pan \"dump and bake\" dinners",
+          growth: "+81% today",
+          why: "Zero-prep dump-bake recipes are trending as a fast-weeknight-dinner counter to elaborate cooking content.",
+          idea: "\"Dump these 6 things in a pan, bake, done\"",
+          hook: "\"No chopping, no pans to clean, no excuses…\"",
+          structure: ["Hook (0-3s)","Dump + bake (4-23s)","Reveal (24-30s)"],
+          caption: "6 ingredients. 1 pan. 0 effort.",
+          hashtags: "#dumpandbake #easydinner #onepanmeal #weeknightdinner",
+          platform: "Instagram Reels",
+          score: {growth:66, search:72, social:68, fresh:79, comp:32}
+        },
+        "YouTube Shorts": {
+          trend: "Budget grocery haul breakdowns",
+          growth: "+59% today",
+          why: "Cost-per-meal grocery hauls are getting strong saves right now as a practical, non-aspirational food format.",
+          idea: "\"$40 grocery haul that makes 7 dinners\"",
+          hook: "\"I fed myself all week for less than one takeout order…\"",
+          structure: ["Hook (0-3s)","Haul + math (4-24s)","The 7 meals (25-30s)"],
+          caption: "$40. 7 dinners. Receipts included.",
+          hashtags: "#budgetmeals #groceryhaul #cheapdinners #mealprep",
+          platform: "YouTube Shorts",
+          score: {growth:52, search:64, social:56, fresh:77, comp:23}
+        }
+      }
+    },
+    "Gaming": {
+      platforms: {
+        "TikTok": {
+          trend: "Cozy sim games as \"anti-burnout\" content",
+          growth: "+101% today",
+          why: "Cozy/farming sim clips are being reframed around burnout recovery, pulling in a non-gaming audience.",
+          idea: "\"I quit doomscrolling for a farming game — here's what changed\"",
+          hook: "\"This game fixed my attention span more than therapy did…\"",
+          structure: ["Hook (0-3s)","Gameplay + why it helps (4-24s)","CTA (25-30s)"],
+          caption: "Turns out planting digital carrots fixed my brain a little.",
+          hashtags: "#cozygames #gamingtok #farmingsim #mentalhealth",
+          platform: "TikTok",
+          score: {growth:76, search:69, social:72, fresh:86, comp:25}
+        },
+        "Instagram Reels": {
+          trend: "\"Hidden mechanic\" reveal clips",
+          growth: "+87% today",
+          why: "Short clips revealing under-the-radar mechanics in popular games are massively outperforming standard gameplay uploads.",
+          idea: "\"You've been playing this wrong the whole time\"",
+          hook: "\"This one setting changes the entire game…\"",
+          structure: ["Hook (0-3s)","The mechanic (4-22s)","Proof/result (23-30s)"],
+          caption: "Wish someone told me this on day one.",
+          hashtags: "#gamingtips #hiddenmechanic #gamershelp #protip",
+          platform: "Instagram Reels",
+          score: {growth:70, search:63, social:75, fresh:81, comp:29}
+        },
+        "YouTube Shorts": {
+          trend: "Speedrun \"world record\" reaction clips",
+          growth: "+94% today",
+          why: "Short reaction cuts to fresh world-record runs are riding a wave of speedrunning going mainstream again.",
+          idea: "\"This world record just got broken by 4 seconds\"",
+          hook: "\"Nobody thought this record would ever fall…\"",
+          structure: ["Hook (0-3s)","The run (4-24s)","Why it matters (25-30s)"],
+          caption: "4 seconds. Years of attempts. Absolutely unreal.",
+          hashtags: "#speedrun #worldrecord #gamingclips #shorts",
+          platform: "YouTube Shorts",
+          score: {growth:81, search:60, social:79, fresh:90, comp:19}
+        }
+      }
+    }
+  };
+
+  const loadingMsgs = ["scanning search velocity…","cross-checking social activity…","weighing freshness vs. competition…","ranking today's opportunities…"];
+  let msgIdx = 0, msgTimer;
+
+  const $ = id => document.getElementById(id);
+
+  function niceDate(){
+    return new Date().toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+  }
+  $('dateTag').textContent = niceDate();
+
+  $('findBtn').addEventListener('click', () => {
+    const region = $('region').value.replace(/^\S+\s/, '');
+    const niche = $('niche').value.replace(/^\S+\s/, '');
+    const platform = $('platform').value.replace(/^\S+\s/, '');
+
+    $('findBtn').disabled = true;
+    $('result').classList.remove('active');
+    $('loading').classList.add('active');
+    msgIdx = 0;
+    $('loadingText').textContent = loadingMsgs[0];
+    msgTimer = setInterval(() => {
+      msgIdx = (msgIdx + 1) % loadingMsgs.length;
+      $('loadingText').textContent = loadingMsgs[msgIdx];
+    }, 420);
+
+    setTimeout(() => {
+      clearInterval(msgTimer);
+      $('loading').classList.remove('active');
+      renderResult(region, niche, platform);
+      $('result').classList.add('active');
+      $('findBtn').disabled = false;
+    }, 1650);
+  });
+
+  function renderResult(region, niche, platform){
+    const data = (NICHE_DATA[niche] && NICHE_DATA[niche].platforms[platform]) || NICHE_DATA["Tech / AI"].platforms["TikTok"];
+
+    $('growthBadge').textContent = "▲ " + data.growth.toUpperCase();
+    $('trendTitle').textContent = "\u201c" + data.trend + "\u201d";
+    $('whyNow').innerHTML = data.why.replace(/(\+?\d+%)/, '<b>$1</b>') + (region !== "Global" ? ` <b>· ${region}</b>` : '');
+    $('videoIdea').textContent = data.idea;
+    $('hook').textContent = data.hook;
+
+    $('structure').innerHTML = data.structure.map((s,i) => {
+      const labels = ["HOOK","BODY","CTA"];
+      return `<div class="structure-step"><b>${labels[i] || 'STEP'}</b>${s}</div>`;
+    }).join('');
+
+    $('caption').textContent = data.caption;
+    $('hashtags').textContent = data.hashtags;
+    $('bestPlatform').textContent = "📱 Best on " + data.platform;
+
+    const s = data.score;
+    const total = Math.max(0, Math.min(100, s.growth*0.3 + s.search*0.25 + s.social*0.2 + s.fresh*0.15 - s.comp*0.2 + 10)).toFixed(0);
+    $('scoreTotal').textContent = total + " / 100";
+    const rows = [
+      {label:"Growth speed", val:s.growth},
+      {label:"Search interest", val:s.search},
+      {label:"Social activity", val:s.social},
+      {label:"Freshness", val:s.fresh},
+      {label:"Competition", val:s.comp, neg:true}
+    ];
+    $('scoreRows').innerHTML = rows.map(r => `
+      <div class="score-row">
+        <div class="score-row-label">${r.label}</div>
+        <div class="score-track"><div class="score-fill ${r.neg?'neg':''}" style="width:${r.val}%"></div></div>
+        <div class="score-val">${r.neg?'−':''}${r.val}</div>
+      </div>
+    `).join('');
+
+    window._currentTrend = data;
+    window._currentRegion = region;
+  }
+
+  function copyText(id){
+    const text = $(id).textContent;
+    navigator.clipboard.writeText(text).catch(()=>{});
+    showToast('Copied to clipboard');
+  }
+
+  function showToast(msg){
+    $('toast').textContent = msg;
+    $('toast').classList.add('active');
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => $('toast').classList.remove('active'), 1800);
+  }
+
+  function openShare(){
+    const d = window._currentTrend;
+    if(!d) return;
+    $('shareCardText').textContent = "\u201c" + d.trend + "\u201d";
+    $('shareCardDate').textContent = niceDate().toUpperCase() + " · " + (window._currentRegion || '').toUpperCase();
+    $('modalBg').classList.add('active');
+  }
+  function closeShare(){ $('modalBg').classList.remove('active'); }
+  $('modalBg').addEventListener('click', e => { if(e.target === $('modalBg')) closeShare(); });
+
+  document.querySelectorAll('.pro-pill, .unlock-btn').forEach(el => {
+    el.addEventListener('click', () => showToast('Pro checkout goes here — Stripe wiring next'));
+  });
+
+  // auto-run once on load for an instant "wow"
+  window.addEventListener('load', () => $('findBtn').click());
+</script>
+</body>
+</html>
