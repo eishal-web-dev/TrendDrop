@@ -101,6 +101,7 @@
   .cta:active{transform:translateY(0);}
   .cta:disabled{opacity:0.6; cursor:default; transform:none;}
   .streak{text-align:center; color:var(--muted-2); font-size:12px; margin-top:14px; font-family:'JetBrains Mono',monospace;}
+  .niche-count{text-align:center; color:var(--muted-2); font-size:11.5px; margin-top:8px; font-family:'JetBrains Mono',monospace;}
 
   /* LOADING */
   .loading{display:none; flex-direction:column; align-items:center; gap:18px; padding:70px 0 40px;}
@@ -316,6 +317,12 @@
         <option>🎯 Beauty</option>
         <option>🎯 Food</option>
         <option>🎯 Gaming</option>
+        <option>🎯 Fashion</option>
+        <option>🎯 Travel</option>
+        <option>🎯 Parenting & Family</option>
+        <option>🎯 Real Estate</option>
+        <option>🎯 Pets</option>
+        <option>🎯 Crypto & Investing</option>
       </select>
     </div>
     <div class="select-pill">
@@ -331,6 +338,7 @@
     <button class="cta" id="findBtn">Find today's trend →</button>
   </div>
   <div class="streak" id="streak">🔥 3-day streak · come back tomorrow for a new drop</div>
+  <div class="niche-count">12 niches · 3 platforms · 36 tracked combinations today</div>
 
   <div class="loading" id="loading">
     <div class="ring"></div>
@@ -693,6 +701,246 @@
           hashtags: "#speedrun #worldrecord #gamingclips #shorts",
           platform: "YouTube Shorts",
           score: {growth:81, search:60, social:79, fresh:90, comp:19}
+        }
+      }
+    },
+    "Fashion": {
+      platforms: {
+        "TikTok": {
+          trend: "Thrifted \u201cgrandpa core\u201d layering",
+          growth: "+98% today",
+          why: "Secondhand layering fits are outpacing new-season haul videos as thrifting content keeps climbing.",
+          idea: "\"5 grandpa-core pieces for under $10 total\"",
+          hook: "\"I built this whole outfit for less than one coffee…\"",
+          structure: ["Hook (0-3s)","5 pieces + prices (4-24s)","Full fit reveal (25-30s)"],
+          caption: "Thrifted, layered, $9.50 total. No new-season haul needed.",
+          hashtags: "#thriftflip #grandpacore #thriftedfashion #outfitideas",
+          platform: "TikTok",
+          score: {growth:85, search:79, social:70, fresh:82, comp:30}
+        },
+        "Instagram Reels": {
+          trend: "Capsule wardrobe \u201crule of 5\u201d",
+          growth: "+85% today",
+          why: "Minimalist capsule-wardrobe reels are getting unusually high save rates as \"fewer, better pieces\" content trends.",
+          idea: "\"5 pieces, 20 outfits — my capsule wardrobe rule\"",
+          hook: "\"I stopped buying clothes and started doing this instead…\"",
+          structure: ["Hook (0-3s)","The 5 pieces (4-22s)","Outfit combos (23-30s)"],
+          caption: "5 pieces. 20 outfits. Closet finally makes sense.",
+          hashtags: "#capsulewardrobe #minimaliststyle #outfitplanning #stylehacks",
+          platform: "Instagram Reels",
+          score: {growth:73, search:75, social:66, fresh:77, comp:33}
+        },
+        "YouTube Shorts": {
+          trend: "Cost-per-wear outfit math",
+          growth: "+72% today",
+          why: "Creators breaking down cost-per-wear on expensive staples are reframing spending as smart rather than wasteful.",
+          idea: "\"This $200 jacket costs me $0.80 per wear — the math\"",
+          hook: "\"Expensive isn't the same as wasteful…\"",
+          structure: ["Hook (0-3s)","The math (4-22s)","Verdict (23-30s)"],
+          caption: "Ran the numbers on my most \"expensive\" purchase. Turns out it's my cheapest.",
+          hashtags: "#costperwear #fashionmath #sustainablefashion #wardrobe",
+          platform: "YouTube Shorts",
+          score: {growth:58, search:61, social:54, fresh:74, comp:22}
+        }
+      }
+    },
+    "Travel": {
+      platforms: {
+        "TikTok": {
+          trend: "\u201cOne bag\u201d carry-on only trips",
+          growth: "+109% today",
+          why: "Carry-on-only packing content is spiking as baggage fees climb and creators show it's actually doable for longer trips.",
+          idea: "\"I did 10 days in Europe with one carry-on\"",
+          hook: "\"No checked bag, no baggage fees, no regrets…\"",
+          structure: ["Hook (0-3s)","What's packed (4-24s)","Why it worked (25-30s)"],
+          caption: "10 days. 1 bag. Saved $140 in baggage fees alone.",
+          hashtags: "#onebagtravel #packinglight #travelhacks #carryon",
+          platform: "TikTok",
+          score: {growth:93, search:81, social:75, fresh:88, comp:28}
+        },
+        "Instagram Reels": {
+          trend: "Shoulder-season destination swaps",
+          growth: "+90% today",
+          why: "\"Go now, not in peak season\" reels are trending as travelers look for cheaper, less crowded alternatives.",
+          idea: "\"Skip peak season — go here instead\"",
+          hook: "\"Same view, half the crowd, way less money…\"",
+          structure: ["Hook (0-3s)","The swap (4-23s)","Price comparison (24-30s)"],
+          caption: "Same photo. Different month. Half the price.",
+          hashtags: "#shoulderseason #traveltips #budgettravel #hiddengem",
+          platform: "Instagram Reels",
+          score: {growth:78, search:72, social:69, fresh:80, comp:31}
+        },
+        "YouTube Shorts": {
+          trend: "Airport layover \u201cmicro itineraries\u201d",
+          growth: "+77% today",
+          why: "Short \"what I did on my layover\" content is outperforming full travel vlogs this week.",
+          idea: "\"What I did with a 7-hour layover in Istanbul\"",
+          hook: "\"Most people just sleep in the airport. I didn't…\"",
+          structure: ["Hook (0-3s)","The plan (4-23s)","Was it worth it? (24-30s)"],
+          caption: "7 hours. 1 city. Made it back with time to spare.",
+          hashtags: "#layover #travelhack #citybreak #shorts",
+          platform: "YouTube Shorts",
+          score: {growth:66, search:64, social:58, fresh:76, comp:20}
+        }
+      }
+    },
+    "Parenting & Family": {
+      platforms: {
+        "TikTok": {
+          trend: "\u201cSilent toddler meltdown\u201d de-escalation",
+          growth: "+95% today",
+          why: "Gentle-parenting scripts for meltdowns are getting unusually high save rates as \"what to say instead\" content trends.",
+          idea: "\"The 3-step method that actually stops tantrums\"",
+          hook: "\"I stopped saying 'calm down' and tried this instead…\"",
+          structure: ["Hook (0-3s)","3 steps (4-24s)","Result (25-30s)"],
+          caption: "Stopped saying 'calm down.' Started doing this. Huge difference.",
+          hashtags: "#toddlerparenting #gentleparenting #parentingtips #momsoftiktok",
+          platform: "TikTok",
+          score: {growth:82, search:77, social:71, fresh:85, comp:26}
+        },
+        "Instagram Reels": {
+          trend: "Sibling rivalry \u201cfair not equal\u201d scripts",
+          growth: "+80% today",
+          why: "Specific phrase-swap content for sibling conflict is spiking as parents share \"say this, not that\" moments.",
+          idea: "\"What to say instead of 'be nice to your sister'\"",
+          hook: "\"This one phrase stopped the fighting in my house…\"",
+          structure: ["Hook (0-3s)","Old vs new phrase (4-22s)","Why it works (23-30s)"],
+          caption: "One phrase swap. Way fewer meltdowns at dinner.",
+          hashtags: "#siblingrivalry #parentingtips #momlife #familytips",
+          platform: "Instagram Reels",
+          score: {growth:69, search:70, social:64, fresh:78, comp:29}
+        },
+        "YouTube Shorts": {
+          trend: "Screen-time swap challenges",
+          growth: "+68% today",
+          why: "\"We swapped screens for a week\" family challenges are getting strong watch-through as a practical, non-preachy format.",
+          idea: "\"We swapped screen time for this for a week\"",
+          hook: "\"My kids didn't ask for the iPad once. Here's why…\"",
+          structure: ["Hook (0-3s)","The swap (4-23s)","What changed (24-30s)"],
+          caption: "One week, no iPad requests. Did not expect that.",
+          hashtags: "#screentime #parentinghacks #familytime #kidsactivities",
+          platform: "YouTube Shorts",
+          score: {growth:55, search:59, social:52, fresh:73, comp:19}
+        }
+      }
+    },
+    "Real Estate": {
+      platforms: {
+        "TikTok": {
+          trend: "\u201cHidden cost\u201d first-time buyer breakdowns",
+          growth: "+83% today",
+          why: "Cost-breakdown content aimed at first-time buyers is spiking as affordability stays a top search topic.",
+          idea: "\"5 costs nobody warns first-time buyers about\"",
+          hook: "\"The down payment is not the expensive part…\"",
+          structure: ["Hook (0-3s)","5 hidden costs (4-24s)","How to prep (25-30s)"],
+          caption: "The down payment is the easy part. These 5 aren't.",
+          hashtags: "#firsttimehomebuyer #realestatetips #homebuying #realtor",
+          platform: "TikTok",
+          score: {growth:71, search:68, social:60, fresh:79, comp:24}
+        },
+        "Instagram Reels": {
+          trend: "Off-market listing walkthroughs",
+          growth: "+71% today",
+          why: "Off-market and coming-soon listing tours are outperforming standard open-house content this week.",
+          idea: "\"This house isn't even listed yet — here's the tour\"",
+          hook: "\"You won't find this one on Zillow…\"",
+          structure: ["Hook (0-3s)","Walkthrough (4-24s)","How to get access (25-30s)"],
+          caption: "Off-market, no online listing, and it's stunning.",
+          hashtags: "#offmarket #realestatereels #housetour #realtorlife",
+          platform: "Instagram Reels",
+          score: {growth:60, search:62, social:56, fresh:75, comp:27}
+        },
+        "YouTube Shorts": {
+          trend: "Rent vs. buy break-even calculators",
+          growth: "+65% today",
+          why: "Rent-vs-buy math content is trending as buyers question conventional \"buy if you can\" advice in this rate environment.",
+          idea: "\"The exact math on rent vs buy in this market\"",
+          hook: "\"Everyone says 'buy if you can' — here's when that's wrong…\"",
+          structure: ["Hook (0-3s)","The math (4-23s)","Break-even point (24-30s)"],
+          caption: "Ran the actual numbers. Buying isn't always the move right now.",
+          hashtags: "#rentvsbuy #realestate #personalfinance #homebuying",
+          platform: "YouTube Shorts",
+          score: {growth:54, search:58, social:50, fresh:72, comp:21}
+        }
+      }
+    },
+    "Pets": {
+      platforms: {
+        "TikTok": {
+          trend: "\u201cEnrichment not just walks\u201d dog content",
+          growth: "+102% today",
+          why: "Enrichment-game content is climbing fast as dog owners move past \"just walk them more\" advice.",
+          idea: "\"5 enrichment games that tire your dog out faster than a walk\"",
+          hook: "\"Stop just walking your dog — do this instead…\"",
+          structure: ["Hook (0-3s)","5 games (4-24s)","Result (25-30s)"],
+          caption: "20 minutes of this beat an hour-long walk. Every time.",
+          hashtags: "#dogenrichment #doglife #puppytraining #dogsoftiktok",
+          platform: "TikTok",
+          score: {growth:88, search:80, social:74, fresh:86, comp:29}
+        },
+        "Instagram Reels": {
+          trend: "Cat \u201csilent communication\u201d cues",
+          growth: "+88% today",
+          why: "Cat body-language explainer reels are spiking as \"what your cat is actually telling you\" content trends.",
+          idea: "\"3 cat signals everyone misses\"",
+          hook: "\"Your cat has been telling you this the whole time…\"",
+          structure: ["Hook (0-3s)","3 signals (4-22s)","What to do (23-30s)"],
+          caption: "Been missing this one for years. Wish I knew sooner.",
+          hashtags: "#catbehavior #catsofinstagram #pettips #catlover",
+          platform: "Instagram Reels",
+          score: {growth:75, search:73, social:68, fresh:79, comp:32}
+        },
+        "YouTube Shorts": {
+          trend: "Budget pet-cost breakdowns",
+          growth: "+70% today",
+          why: "Real monthly pet-cost breakdowns are getting strong saves as prospective owners search actual numbers, not estimates.",
+          idea: "\"What my dog actually costs me per month\"",
+          hook: "\"People underestimate this by a lot…\"",
+          structure: ["Hook (0-3s)","The breakdown (4-23s)","Total + surprises (24-30s)"],
+          caption: "The food wasn't the expensive part. Vet visits were.",
+          hashtags: "#petcosts #dogowner #budgeting #dogtips",
+          platform: "YouTube Shorts",
+          score: {growth:61, search:63, social:55, fresh:75, comp:23}
+        }
+      }
+    },
+    "Crypto & Investing": {
+      platforms: {
+        "TikTok": {
+          trend: "\u201cDollar-cost averaging\u201d automation hacks",
+          growth: "+92% today",
+          why: "Automated-investing setup content is spiking as more people look to remove emotion from timing the market.",
+          idea: "\"I automated my investing so I never have to think about it\"",
+          hook: "\"I haven't manually invested in 6 months and I'm ahead…\"",
+          structure: ["Hook (0-3s)","The setup (4-24s)","Result so far (25-30s)"],
+          caption: "Set it up once. Haven't touched it since. Still ahead.",
+          hashtags: "#dca #investing #cryptotips #personalfinance",
+          platform: "TikTok",
+          score: {growth:80, search:76, social:67, fresh:83, comp:27}
+        },
+        "Instagram Reels": {
+          trend: "Stablecoin yield explainers",
+          growth: "+76% today",
+          why: "Yield-on-stablecoins explainers are trending as viewers look for lower-volatility ways to earn on idle cash.",
+          idea: "\"How people are earning yield without the price risk\"",
+          hook: "\"This isn't the same as buying crypto and hoping…\"",
+          structure: ["Hook (0-3s)","How it works (4-23s)","Risks to know (24-30s)"],
+          caption: "Not investment advice. Just explaining how the mechanism works.",
+          hashtags: "#stablecoin #cryptoyield #defi #investing",
+          platform: "Instagram Reels",
+          score: {growth:65, search:67, social:60, fresh:76, comp:30}
+        },
+        "YouTube Shorts": {
+          trend: "Beginner portfolio \u201crebalance\u201d walkthroughs",
+          growth: "+62% today",
+          why: "First-time rebalancing walkthroughs are getting strong watch-through as new investors hit their first \"now what\" moment.",
+          idea: "\"I rebalanced my portfolio for the first time — here's how\"",
+          hook: "\"Most people never do this and it costs them…\"",
+          structure: ["Hook (0-3s)","The walkthrough (4-23s)","What changed (24-30s)"],
+          caption: "First rebalance ever. Took 10 minutes. Should've done it sooner.",
+          hashtags: "#portfolio #investing101 #rebalancing #stockmarket",
+          platform: "YouTube Shorts",
+          score: {growth:53, search:57, social:49, fresh:71, comp:18}
         }
       }
     }
