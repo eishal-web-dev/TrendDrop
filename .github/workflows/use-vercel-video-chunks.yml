@@ -1,0 +1,130 @@
+name: Use Vercel video chunk relay
+
+on:
+  push:
+    paths:
+      - '.github/workflows/use-vercel-video-chunks.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Patch video upload flow
+        shell: python
+        run: |
+          from pathlib import Path
+          import json, re
+
+          # Sign each Gemini resumable session so the relay cannot be used as an open proxy.
+          p = Path('api/video-upload-init.js')
+          s = p.read_text()
+          if "const crypto = require('crypto');" not in s:
+              s = "const crypto = require('crypto');\n" + s
+          old = "return send(res, 200, { configured: true, uploadUrl, displayName });"
+          new = "const uploadToken = crypto.createHmac('sha256', apiKey).update(uploadUrl).digest('hex');\n    return send(res, 200, { configured: true, uploadUrl, uploadToken, displayName });"
+          if old not in s:
+              raise SystemExit('video-upload-init return statement not found')
+          p.write_text(s.replace(old, new, 1))
+
+          helper = r'''async function uploadGeminiFile(uploadUrl, uploadToken, file, mimeType) {
+            const CHUNK_BYTES = 2 * 1024 * 1024;
+            let offset = 0;
+            let finalData = null;
+
+            while (offset < file.size) {
+              const end = Math.min(offset + CHUNK_BYTES, file.size);
+              const isFinal = end >= file.size;
+              const chunk = file.slice(offset, end);
+              const controller = new AbortController();
+              const timer = setTimeout(() => controller.abort(), 90000);
+
+              let response;
+              try {
+                response = await fetch('/api/video-upload-chunk', {
+                  method: 'POST',
+                  signal: controller.signal,
+                  headers: {
+                    'Content-Type': 'application/octet-stream',
+                    'X-TrendDrop-Upload-Url': uploadUrl,
+                    'X-TrendDrop-Upload-Token': uploadToken,
+                    'X-TrendDrop-Upload-Offset': String(offset),
+                    'X-TrendDrop-Upload-Final': isFinal ? '1' : '0',
+                  },
+                  body: chunk,
+                });
+              } catch (error) {
+                if (error?.name === 'AbortError') throw new Error('A video upload chunk timed out. Please retry.');
+                throw new Error('TrendDrop could not upload this video chunk. Please retry.');
+              } finally {
+                clearTimeout(timer);
+              }
+
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data.detail ? `${data.error} (${data.detail})` : (data.error || `Video upload failed (HTTP ${response.status}).`));
+              }
+
+              if (isFinal) finalData = data;
+              offset = end;
+            }
+
+            return finalData || {};
+          }'''
+
+          # Meme Remix module.
+          p = Path('js/meme-remix-app.js')
+          s = p.read_text()
+          pattern = r"function uploadGeminiFile\(uploadUrl, file, mimeType\) \{.*?\n\}\n\nfunction openPicker"
+          repl = helper + "\n\nfunction openPicker"
+          s2, count = re.subn(pattern, repl, s, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit(f'meme-remix upload helper replacement count={count}')
+          s2 = s2.replace("if (!initRes.ok || !initData.uploadUrl) throw", "if (!initRes.ok || !initData.uploadUrl || !initData.uploadToken) throw", 1)
+          s2 = s2.replace("uploadGeminiFile(initData.uploadUrl, videoFile, uploadMimeType)", "uploadGeminiFile(initData.uploadUrl, initData.uploadToken, videoFile, uploadMimeType)", 1)
+          p.write_text(s2)
+
+          # Viral Brain inline script.
+          p = Path('viral-brain.html')
+          s = p.read_text()
+          helper_inline = helper.replace('async function uploadGeminiFile', '  async function uploadGeminiFile')
+          pattern = r"  function uploadGeminiFile\(uploadUrl, file, mimeType\)\{.*?\n  \}\n\n  function useVideoFile"
+          repl = helper_inline + "\n\n  function useVideoFile"
+          s2, count = re.subn(pattern, repl, s, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit(f'viral-brain upload helper replacement count={count}')
+          s2 = s2.replace("if(!initRes.ok || !initData.uploadUrl) throw", "if(!initRes.ok || !initData.uploadUrl || !initData.uploadToken) throw", 1)
+          s2 = s2.replace("uploadGeminiFile(initData.uploadUrl, videoFile, uploadMimeType)", "uploadGeminiFile(initData.uploadUrl, initData.uploadToken, videoFile, uploadMimeType)", 1)
+          p.write_text(s2)
+
+          # Give each small relay request enough time while staying under Vercel's 4.5 MB body cap.
+          p = Path('vercel.json')
+          cfg = json.loads(p.read_text())
+          cfg.setdefault('functions', {})['api/video-upload-chunk.js'] = {'maxDuration': 60}
+          p.write_text(json.dumps(cfg, indent=2) + '\n')
+
+      - name: Verify patch
+        run: |
+          node --check api/video-upload-init.js
+          node --check api/video-upload-chunk.js
+          node --check js/meme-remix-app.js
+          grep -q "X-TrendDrop-Upload-Token" js/meme-remix-app.js
+          grep -q "X-TrendDrop-Upload-Token" viral-brain.html
+          grep -q 'api/video-upload-chunk.js' vercel.json
+          ! grep -q "xhr.open('POST', uploadUrl" js/meme-remix-app.js
+          ! grep -q "xhr.open('POST', uploadUrl" viral-brain.html
+
+      - name: Commit fix
+        run: |
+          git config user.name "TrendDrop Upload Relay Fix"
+          git config user.email "actions@github.com"
+          git add api/video-upload-init.js js/meme-remix-app.js viral-brain.html vercel.json
+          git commit -m "Route video uploads through Vercel chunk relay"
+          git push origin HEAD:main
