@@ -11,8 +11,12 @@ const crypto = require('crypto');
 function getKey() {
   const raw = process.env.COOKIE_SECRET;
   if (!raw) throw new Error('COOKIE_SECRET is not configured');
-  const key = Buffer.from(raw, 'base64');
-  if (key.length !== 32) throw new Error('COOKIE_SECRET must decode to exactly 32 bytes');
+  // Defensive trim: copy-pasting into a dashboard env var field commonly
+  // introduces a trailing newline or stray space, which silently breaks
+  // base64 decoding and previously crashed the whole function instead of
+  // failing cleanly.
+  const key = Buffer.from(raw.trim(), 'base64');
+  if (key.length !== 32) throw new Error('COOKIE_SECRET must decode to exactly 32 bytes — check for extra whitespace or a truncated value');
   return key;
 }
 
@@ -27,10 +31,10 @@ function encrypt(plainObject) {
 }
 
 function decrypt(token) {
-  const key = getKey();
   const [ivB64, tagB64, dataB64] = String(token || '').split('.');
   if (!ivB64 || !tagB64 || !dataB64) return null;
   try {
+    const key = getKey();
     const decipher = crypto.createDecipheriv('aes-256-gcm', key, Buffer.from(ivB64, 'base64url'));
     decipher.setAuthTag(Buffer.from(tagB64, 'base64url'));
     const decrypted = Buffer.concat([

@@ -35,23 +35,30 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  const state = crypto.randomBytes(16).toString('hex');
-  setSessionCookie(res, { oauthState: state }, 600); // 10 min CSRF window, overwritten on callback
+  try {
+    const state = crypto.randomBytes(16).toString('hex');
+    setSessionCookie(res, { oauthState: state }, 600); // 10 min CSRF window, overwritten on callback
 
-  const params = new URLSearchParams({
-    client_id: appId,
-    redirect_uri: redirectUri,
-    response_type: 'code',
-    // Minimum scope for permitted profile/media read. Deeper insights
-    // scopes (e.g. instagram_business_manage_insights) require additional
-    // Meta App Review and are not requested until a real product need
-    // justifies that review.
-    scope: 'instagram_business_basic',
-    state,
-  });
+    const params = new URLSearchParams({
+      client_id: appId,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      // Minimum scope for permitted profile/media read. Deeper insights
+      // scopes (e.g. instagram_business_manage_insights) require additional
+      // Meta App Review and are not requested until a real product need
+      // justifies that review.
+      scope: 'instagram_business_basic',
+      state,
+    });
 
-  return send(res, 200, {
-    configured: true,
-    authorizeUrl: `https://api.instagram.com/oauth/authorize?${params.toString()}`,
-  });
+    return send(res, 200, {
+      configured: true,
+      authorizeUrl: `https://api.instagram.com/oauth/authorize?${params.toString()}`,
+    });
+  } catch (error) {
+    console.error('[instagram-oauth-start] error', error);
+    return send(res, 500, {
+      error: 'Could not start the Instagram connection. This usually means COOKIE_SECRET is set but malformed (it must decode to exactly 32 bytes — check for a stray space or newline from copy/pasting it).',
+    });
+  }
 };
