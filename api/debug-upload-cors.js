@@ -24,7 +24,7 @@ module.exports = async function handler(req, res) {
       headers: {
         'Origin': origin,
         'Access-Control-Request-Method': 'POST',
-        'Access-Control-Request-Headers': 'x-goog-upload-command,x-goog-upload-offset'
+        'Access-Control-Request-Headers': 'content-type,x-goog-upload-command,x-goog-upload-offset'
       }
     });
     return res.status(200).json({
