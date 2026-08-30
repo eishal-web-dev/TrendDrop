@@ -249,7 +249,6 @@ async function runPipeline() {
     const uploadRes = await fetch(initData.uploadUrl, {
       method: 'POST',
       headers: {
-        'Content-Length': String(videoFile.size),
         'X-Goog-Upload-Offset': '0',
         'X-Goog-Upload-Command': 'upload, finalize',
       },
