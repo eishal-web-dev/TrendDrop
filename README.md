@@ -31,7 +31,7 @@ Deploy on Vercel as before; set the environment variables in `.env.example` unde
 - **Meme library**: ships with an original TrendDrop template set (`js/meme-templates.js`) — text + emoji reaction cards rendered on canvas, tagged by emotion and style (Pakistani drama, Bollywood, Desi chaotic, Global Gen Z, Savage, Deadpan, Cute, Cinematic comedy, Clean family-friendly, Maximum chaos). This is copyright-safe by construction. It does **not** include licensed Bollywood/desi pop-culture clips — sourcing and licensing those is a business decision for the repo owner, not something this build can do unilaterally. The template schema supports adding a `videoUrl` + `license` field per entry later to composite a real licensed clip instead of the canvas card.
 - **Dead-air trimming** is capped at 6 removed segments per render to keep the browser-side filter graph tractable; longer/more-frequent-pause videos will have some dead air remain.
 - **"Re-render with changes"** re-runs the full pipeline rather than patching just the edited section — genuine, just not incremental yet.
-- Known edge case: a completely silent source video combined with "remove dead air" intensity settings can fail the render (the audio-trim filter assumes an audio stream exists); documented rather than silently faking a fix.
+- Silent source videos (no audio stream) are detected before building the filter graph and rendered without an audio track or dead-air removal, rather than failing or silently producing a broken file.
 
 ## Product flow
 

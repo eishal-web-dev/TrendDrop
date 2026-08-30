@@ -71,7 +71,30 @@ async function detectSilence(ffmpeg, inputName, { noiseDb = -30, minDurationS = 
   return segments;
 }
 
-// ---------- Canvas-rendered overlay cards (captions + memes) ----------
+// ---------- Audio stream presence check ----------
+
+/**
+ * Detects whether the input actually has an audio stream, by running
+ * ffmpeg with no output (a deliberate "failure" that still logs stream
+ * info) and checking for an "Audio:" line. Needed because the
+ * filter_complex graph can't reference `0:a` unconditionally the way
+ * `-map 0:a?` can for a plain copy — silent source videos would
+ * otherwise break the whole render.
+ */
+async function hasAudioStream(ffmpeg, inputName) {
+  const lines = [];
+  const collector = message => lines.push(message);
+  ffmpeg.on('log', collector);
+  try {
+    await ffmpeg.exec(['-i', inputName]);
+  } catch {
+    // Expected to "fail" with no output specified — we only want the log.
+  }
+  ffmpeg.off('log', collector);
+  return lines.some(line => /Stream #\d+:\d+.*Audio:/.test(line));
+}
+
+
 
 const CANVAS_W = 1080;
 const CANVAS_H = 1920;
@@ -188,10 +211,10 @@ function canvasToPng(canvas) {
  * piecewise zoompan for pattern interrupts, and overlay compositing for
  * every caption and meme card, each time-windowed with `enable=between`.
  */
-function buildRenderArgs({ overlayCount, zoomMoments, trims, durationSeconds, hasZoom }) {
+function buildRenderArgs({ overlayCount, zoomMoments, trims, durationSeconds, hasZoom, hasAudio }) {
   const filters = [];
   let videoLabel = '0:v';
-  let audioLabel = '0:a';
+  let audioLabel = hasAudio ? '0:a' : null;
 
   // 1) Normalize to vertical 1080x1920, covering the frame.
   filters.push(`[${videoLabel}]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920[base]`);
@@ -202,8 +225,9 @@ function buildRenderArgs({ overlayCount, zoomMoments, trims, durationSeconds, ha
   // capped to a handful of segments to keep the filter graph tractable in
   // a browser-side WASM run). Audio is trimmed and concatenated in lockstep
   // with the video so the two stay in sync — trimming only the video track
-  // would silently desync audio from picture.
-  if (trims && trims.length > 1) {
+  // would silently desync audio from picture. Skipped entirely for silent
+  // sources, since there's no audio track to keep in sync with anyway.
+  if (trims && trims.length > 1 && hasAudio) {
     const videoTrimLabels = trims.map((seg, i) => {
       filters.push(`[${videoLabel}]trim=start=${seg.start}:end=${seg.end},setpts=PTS-STARTPTS[vt${i}]`);
       return `[vt${i}]`;
@@ -217,6 +241,14 @@ function buildRenderArgs({ overlayCount, zoomMoments, trims, durationSeconds, ha
     });
     filters.push(`${audioTrimLabels.join('')}concat=n=${trims.length}:v=0:a=1[atrimmed]`);
     audioLabel = 'atrimmed';
+  } else if (trims && trims.length > 1 && !hasAudio) {
+    // Video-only trim path for silent sources.
+    const videoTrimLabels = trims.map((seg, i) => {
+      filters.push(`[${videoLabel}]trim=start=${seg.start}:end=${seg.end},setpts=PTS-STARTPTS[vt${i}]`);
+      return `[vt${i}]`;
+    });
+    filters.push(`${videoTrimLabels.join('')}concat=n=${trims.length}:v=1:a=0[trimmed]`);
+    videoLabel = 'trimmed';
   }
 
   // 3) Zoom pattern interrupt(s): a single zoompan pass with a piecewise
@@ -240,7 +272,17 @@ function buildRenderArgs({ overlayCount, zoomMoments, trims, durationSeconds, ha
 
   filters.push(`[${videoLabel}]format=yuv420p[vout]`);
 
-  return { filters, overlayInputs, finalVideoLabel: 'vout', finalAudioLabel: audioLabel };
+  // Audio normalization is folded into the same filter_complex graph
+  // (rather than a separate -af flag) to avoid ffmpeg's ambiguity when a
+  // simple filter and -filter_complex both target the same mapped stream.
+  // Skipped entirely when the source has no audio stream at all.
+  let finalAudioLabel = null;
+  if (hasAudio) {
+    filters.push(`[${audioLabel}]loudnorm[aout]`);
+    finalAudioLabel = 'aout';
+  }
+
+  return { filters, overlayInputs, finalVideoLabel: 'vout', finalAudioLabel };
 }
 
 /**
@@ -256,8 +298,10 @@ async function renderMemeRemix({ videoFile, editDecision, onProgress }) {
   const { fetchFile } = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.2/+esm');
   await ffmpeg.writeFile('input.mp4', await fetchFile(videoFile));
 
+  const hasAudio = await hasAudioStream(ffmpeg, 'input.mp4');
+
   let trims = null;
-  if (editDecision.removeDeadAir) {
+  if (editDecision.removeDeadAir && hasAudio) {
     onProgress('silence', 'Detecting dead air and long pauses…');
     const silence = await detectSilence(ffmpeg, 'input.mp4');
     const meaningful = silence.filter(s => s.end - s.start >= 0.6).slice(0, 6); // cap for a tractable filter graph
@@ -297,6 +341,7 @@ async function renderMemeRemix({ videoFile, editDecision, onProgress }) {
     trims,
     durationSeconds: editDecision.durationSeconds,
     hasZoom: editDecision.zoomMoments && editDecision.zoomMoments.length > 0,
+    hasAudio,
   });
 
   let filterComplex = filters.join(';');
@@ -311,10 +356,9 @@ async function renderMemeRemix({ videoFile, editDecision, onProgress }) {
     ...inputArgs,
     '-filter_complex', filterComplex,
     '-map', `[${finalVideoLabel}]`,
-    '-map', finalAudioLabel === '0:a' ? '0:a?' : `[${finalAudioLabel}]`,
+    ...(finalAudioLabel ? ['-map', `[${finalAudioLabel}]`] : []),
     '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '23',
-    '-c:a', 'aac', '-b:a', '128k',
-    '-af', 'loudnorm',
+    ...(finalAudioLabel ? ['-c:a', 'aac', '-b:a', '128k'] : ['-an']),
     '-movflags', '+faststart',
     'output.mp4',
   ];
@@ -323,7 +367,11 @@ async function renderMemeRemix({ videoFile, editDecision, onProgress }) {
 
   onProgress('done', 'Export complete.');
   const data = await ffmpeg.readFile('output.mp4');
-  const blob = new Blob([data.buffer], { type: 'video/mp4' });
+  // readFile() returns a Uint8Array (FileData = Uint8Array | string).
+  // Pass it to Blob directly rather than `.buffer` — if the returned
+  // array is ever a view into a larger underlying ArrayBuffer, `.buffer`
+  // would include bytes outside the actual file, corrupting the export.
+  const blob = new Blob([data], { type: 'video/mp4' });
   return { blob, url: URL.createObjectURL(blob), logLines };
 }
 
