@@ -12,29 +12,29 @@ module.exports = async function handler(req, res) {
         'X-Goog-Upload-Header-Content-Type': 'video/mp4',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ file: { display_name: 'trenddrop-cors-test.mp4' } })
+      body: JSON.stringify({ file: { display_name: 'trenddrop-upload-protocol-test.mp4' } })
     });
     const uploadUrl = startRes.headers.get('x-goog-upload-url');
     if (!startRes.ok || !uploadUrl) {
-      return res.status(200).json({ ok: false, startStatus: startRes.status, startBody: (await startRes.text()).slice(0,300) });
+      return res.status(200).json({ ok: false, stage: 'start', status: startRes.status, body: (await startRes.text()).slice(0,300) });
     }
-    const origin = 'https://trenddrop-delta.vercel.app';
-    const opt = await fetch(uploadUrl, {
-      method: 'OPTIONS',
+
+    const uploadRes = await fetch(uploadUrl, {
+      method: 'POST',
       headers: {
-        'Origin': origin,
-        'Access-Control-Request-Method': 'POST',
-        'Access-Control-Request-Headers': 'content-type,x-goog-upload-command,x-goog-upload-offset'
-      }
+        'Content-Type': 'video/mp4',
+        'X-Goog-Upload-Offset': '0',
+        'X-Goog-Upload-Command': 'upload, finalize'
+      },
+      body: Buffer.alloc(1024)
     });
+    const body = await uploadRes.text();
     return res.status(200).json({
-      ok: true,
+      ok: uploadRes.ok,
       startStatus: startRes.status,
-      optionsStatus: opt.status,
-      allowOrigin: opt.headers.get('access-control-allow-origin'),
-      allowMethods: opt.headers.get('access-control-allow-methods'),
-      allowHeaders: opt.headers.get('access-control-allow-headers'),
-      optionsBody: (await opt.text()).slice(0,300)
+      uploadStatus: uploadRes.status,
+      uploadContentType: uploadRes.headers.get('content-type'),
+      body: body.slice(0,500)
     });
   } catch (e) {
     return res.status(200).json({ ok: false, error: String(e && e.message || e) });
