@@ -1,0 +1,39 @@
+name: Test production video chunk upload
+
+on:
+  push:
+    paths:
+      - '.github/workflows/test-production-video-chunks.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start upload session
+        run: |
+          set -euo pipefail
+          curl -fsS -X POST 'https://trenddrop-delta.vercel.app/api/video-upload-init' \
+            -H 'Content-Type: application/json' \
+            --data '{"fileSizeBytes":16,"mimeType":"video/mp4","displayName":"trenddrop-production-chunk-test.mp4"}' \
+            > /tmp/init.json
+          jq -e '.configured == true and (.uploadUrl|length>10) and (.uploadToken|length>10)' /tmp/init.json
+          jq -r '.uploadUrl' /tmp/init.json > /tmp/upload_url
+          jq -r '.uploadToken' /tmp/init.json > /tmp/upload_token
+
+      - name: Relay and finalize one chunk
+        run: |
+          set -euo pipefail
+          printf '0123456789abcdef' > /tmp/chunk.bin
+          UPLOAD_URL="$(cat /tmp/upload_url)"
+          UPLOAD_TOKEN="$(cat /tmp/upload_token)"
+          STATUS=$(curl -sS -o /tmp/final.json -w '%{http_code}' -X POST 'https://trenddrop-delta.vercel.app/api/video-upload-chunk' \
+            -H 'Content-Type: application/octet-stream' \
+            -H "X-TrendDrop-Upload-Url: ${UPLOAD_URL}" \
+            -H "X-TrendDrop-Upload-Token: ${UPLOAD_TOKEN}" \
+            -H 'X-TrendDrop-Upload-Offset: 0' \
+            -H 'X-TrendDrop-Upload-Final: 1' \
+            --data-binary '@/tmp/chunk.bin')
+          echo "status=${STATUS}"
+          cat /tmp/final.json
+          test "$STATUS" = '200'
+          jq -e '.file.uri | startswith("https://generativelanguage.googleapis.com/")' /tmp/final.json
