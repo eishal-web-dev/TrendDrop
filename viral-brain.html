@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="TrendDrop Viral Brain learns from your best Reels, improves a draft, and prepares real-audience Trial Reel variants without fake views or bots.">
+<title>Viral Brain — TrendDrop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0a0a12;
+    --void-2:#10101b;
+    --card:#151520;
+    --card-2:#191926;
+    --line:#29293d;
+    --text:#f5f3ff;
+    --muted:#9695a9;
+    --muted-2:#626176;
+    --pink:#ff3d8a;
+    --orange:#ff8a3d;
+    --purple:#8b3dff;
+    --acid:#c9ff3d;
+    --cyan:#55d8ff;
+    --grad:linear-gradient(115deg,var(--pink),var(--orange) 48%,var(--purple));
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--void);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
+  button,input{font:inherit}
+  button,a{ -webkit-tap-highlight-color:transparent }
+  .blob{position:fixed;border-radius:50%;filter:blur(100px);opacity:.26;z-index:0;pointer-events:none}
+  .blob.one{width:520px;height:520px;background:var(--pink);left:-180px;top:-210px}
+  .blob.two{width:500px;height:500px;background:var(--purple);right:-210px;top:38%}
+  .blob.three{width:340px;height:340px;background:var(--orange);left:42%;bottom:-190px;opacity:.16}
+  .shell{position:relative;z-index:1;width:min(1120px,calc(100% - 36px));margin:0 auto;padding-bottom:80px}
+
+  nav{height:88px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+  .logo{display:flex;align-items:center;gap:9px;color:var(--text);text-decoration:none;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px}
+  .logo-dot{width:11px;height:11px;border-radius:50%;background:var(--grad)}
+  .navlinks{display:flex;align-items:center;gap:8px}
+  .navlink{color:var(--muted);text-decoration:none;font-size:12px;font-weight:700;border:1px solid transparent;padding:9px 13px;border-radius:100px}
+  .navlink:hover,.navlink.active{color:var(--text);border-color:var(--line);background:rgba(20,20,31,.7)}
+  .pro-pill{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.06em;color:var(--void);background:var(--acid);padding:8px 13px;border-radius:100px;border:0;cursor:pointer}
+
+  .hero{padding:62px 0 48px;text-align:center}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--acid);font:700 11px 'JetBrains Mono',monospace;letter-spacing:.11em;text-transform:uppercase;margin-bottom:20px}
+  .eyebrow::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--acid);box-shadow:0 0 18px var(--acid)}
+  h1{font:700 clamp(42px,7vw,76px)/.98 'Space Grotesk',sans-serif;letter-spacing:-.055em;max-width:930px;margin:0 auto 18px}
+  h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{color:var(--muted);font-size:16px;line-height:1.6;max-width:660px;margin:0 auto}
+  .truth-row{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:22px}
+  .truth-chip{font:600 11px 'JetBrains Mono',monospace;color:var(--muted);background:rgba(20,20,31,.72);border:1px solid var(--line);border-radius:100px;padding:8px 12px}
+  .truth-chip.good{color:var(--acid);border-color:rgba(201,255,61,.25)}
+
+  .app-grid{display:grid;grid-template-columns:360px minmax(0,1fr);gap:16px;align-items:start}
+  .panel{background:rgba(21,21,32,.88);border:1px solid var(--line);border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,.24);backdrop-filter:blur(16px)}
+  .panel-head{padding:22px 22px 16px;border-bottom:1px solid var(--line)}
+  .step-tag{color:var(--pink);font:700 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}
+  .panel-title{font:700 19px 'Space Grotesk',sans-serif;letter-spacing:-.02em}
+  .panel-copy{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:5px}
+  .control-section{padding:19px 22px;border-bottom:1px solid var(--line)}
+  .control-section:last-child{border-bottom:0}
+  .label{display:block;color:var(--muted);font:700 10px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:9px}
+  .connect-btn,.primary-btn,.secondary-btn{width:100%;border:0;border-radius:14px;cursor:pointer;font-weight:700;transition:transform .15s ease,opacity .15s ease,border-color .15s ease}
+  .connect-btn{color:var(--text);background:linear-gradient(100deg,rgba(255,61,138,.18),rgba(139,61,255,.18));border:1px solid rgba(255,61,138,.35);padding:13px 15px;display:flex;align-items:center;justify-content:center;gap:9px}
+  .connect-btn:hover,.primary-btn:hover{transform:translateY(-1px)}
+  .connect-btn.connected{color:var(--acid);border-color:rgba(201,255,61,.3);background:rgba(201,255,61,.07);cursor:default}
+  .account-preview{display:none;align-items:center;gap:11px;margin-top:12px;padding:11px;border-radius:14px;background:var(--void-2);border:1px solid var(--line)}
+  .account-preview.active{display:flex}
+  .avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--grad);font:700 14px 'Space Grotesk',sans-serif;color:#0a0a12}
+  .account-name{font-weight:700;font-size:13px}
+  .account-meta{font:500 10px 'JetBrains Mono',monospace;color:var(--muted);margin-top:3px}
+  .scan-state{margin-left:auto;color:var(--acid);font-size:16px}
+
+  .topic-input{width:100%;background:var(--void-2);border:1px solid var(--line);color:var(--text);padding:12px 13px;border-radius:12px;outline:none;font-size:13px;margin-bottom:10px}
+  .topic-input:focus{border-color:var(--pink)}
+  .upload-zone{border:1px dashed #414159;border-radius:16px;padding:22px 14px;text-align:center;cursor:pointer;background:rgba(10,10,18,.45);transition:border-color .15s ease,background .15s ease}
+  .upload-zone:hover,.upload-zone.drag{border-color:var(--pink);background:rgba(255,61,138,.05)}
+  .upload-icon{width:42px;height:42px;border-radius:13px;background:var(--card-2);display:grid;place-items:center;margin:0 auto 10px;font-size:20px}
+  .upload-title{font-weight:700;font-size:13px}
+  .upload-sub{color:var(--muted-2);font-size:11px;margin-top:4px}
+  .demo-link{display:block;width:100%;border:0;background:none;color:var(--cyan);font-size:11.5px;font-weight:700;cursor:pointer;margin-top:11px;padding:4px}
+  .file-card{display:none;margin-top:11px;padding:10px;border-radius:13px;background:var(--void-2);border:1px solid var(--line);gap:10px;align-items:center}
+  .file-card.active{display:flex}
+  .file-thumb{width:46px;height:46px;border-radius:10px;background:linear-gradient(145deg,rgba(255,61,138,.28),rgba(139,61,255,.26));display:grid;place-items:center;font-size:18px;overflow:hidden;flex-shrink:0}
+  .file-thumb video{width:100%;height:100%;object-fit:cover}
+  .file-info{min-width:0;flex:1}
+  .file-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .file-meta{font:500 10px 'JetBrains Mono',monospace;color:var(--muted);margin-top:4px}
+  .remove-file{border:0;background:none;color:var(--muted-2);cursor:pointer;font-size:15px;padding:4px}
+  .primary-btn{margin-top:12px;padding:14px 16px;color:var(--void);background:var(--grad);text-transform:uppercase;font:700 12px 'Space Grotesk',sans-serif;letter-spacing:.03em}
+  .primary-btn:disabled{opacity:.38;cursor:not-allowed;transform:none}
+  .privacy-note{font-size:10.5px;color:var(--muted-2);line-height:1.45;margin-top:10px;text-align:center}
+
+  .workspace{min-height:674px;overflow:hidden}
+  .workspace-top{padding:19px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .workspace-title{font:700 14px 'Space Grotesk',sans-serif}
+  .status{font:700 10px 'JetBrains Mono',monospace;color:var(--muted);border:1px solid var(--line);border-radius:100px;padding:6px 10px}
+  .status.ready{color:var(--acid);border-color:rgba(201,255,61,.25);background:rgba(201,255,61,.05)}
+  .workspace-body{padding:22px}
+
+  .empty-state{min-height:580px;display:grid;place-items:center;text-align:center;padding:40px}
+  .brain-orb{width:126px;height:126px;border-radius:38px;margin:0 auto 22px;position:relative;display:grid;place-items:center;background:linear-gradient(145deg,rgba(255,61,138,.2),rgba(139,61,255,.18));border:1px solid rgba(255,61,138,.28);box-shadow:0 0 70px rgba(139,61,255,.18)}
+  .brain-orb::before,.brain-orb::after{content:'';position:absolute;border-radius:30px;border:1px solid rgba(255,255,255,.07)}
+  .brain-orb::before{inset:10px}.brain-orb::after{inset:22px}
+  .brain-glyph{font:700 38px 'Space Grotesk',sans-serif;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .empty-state h2{font:700 25px 'Space Grotesk',sans-serif;margin-bottom:8px}
+  .empty-state p{color:var(--muted);font-size:13.5px;line-height:1.55;max-width:390px;margin:0 auto}
+  .empty-steps{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:20px}
+  .empty-step{font:600 10.5px 'JetBrains Mono',monospace;color:var(--muted);border:1px solid var(--line);padding:8px 10px;border-radius:100px}
+
+  .analysis-state{display:none;min-height:580px;place-items:center;padding:48px 28px;text-align:center}
+  .analysis-state.active{display:grid}
+  .scan-orb{width:118px;height:118px;border-radius:50%;position:relative;margin:0 auto 26px;background:conic-gradient(var(--pink) var(--progress,0%),var(--card-2) 0);display:grid;place-items:center;transition:background .3s ease}
+  .scan-orb::after{content:'';position:absolute;inset:8px;background:var(--card);border-radius:50%}
+  .scan-percent{position:relative;z-index:1;font:700 22px 'JetBrains Mono',monospace}
+  .analysis-state h2{font:700 23px 'Space Grotesk',sans-serif;margin-bottom:7px}
+  .analysis-copy{color:var(--muted);font-size:13px}
+  .analysis-list{width:min(420px,100%);margin:24px auto 0;text-align:left;display:grid;gap:7px}
+  .analysis-item{display:flex;align-items:center;gap:9px;color:var(--muted-2);font-size:11.5px;padding:9px 11px;border:1px solid var(--line);border-radius:11px;background:var(--void-2)}
+  .analysis-item.done{color:var(--text);border-color:rgba(201,255,61,.18)}
+  .analysis-item.done .analysis-mark{color:var(--acid)}
+  .analysis-mark{width:18px;text-align:center;font-family:'JetBrains Mono',monospace}
+
+  .results{display:none}
+  .results.active{display:block;animation:rise .45s ease both}
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .personal-strip{display:grid;grid-template-columns:1.2fr repeat(3,.7fr);gap:8px;margin-bottom:15px}
+  .signal-card{background:var(--void-2);border:1px solid var(--line);border-radius:15px;padding:13px}
+  .signal-card.primary{background:linear-gradient(120deg,rgba(255,61,138,.1),rgba(139,61,255,.08));border-color:rgba(255,61,138,.23)}
+  .signal-label{font:700 9.5px 'JetBrains Mono',monospace;color:var(--muted-2);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+  .signal-value{font:700 14px 'Space Grotesk',sans-serif;line-height:1.2}
+  .signal-value.number{font:700 21px 'JetBrains Mono',monospace;color:var(--acid)}
+  .result-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:3px 0 12px}
+  .result-head h2{font:700 21px 'Space Grotesk',sans-serif;letter-spacing:-.02em}
+  .result-head p{color:var(--muted);font-size:11.5px;margin-top:4px}
+  .model-tag{font:700 9.5px 'JetBrains Mono',monospace;color:var(--cyan);white-space:nowrap}
+  .variants{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+  .variant{background:var(--void-2);border:1px solid var(--line);border-radius:17px;padding:14px;cursor:pointer;transition:border-color .15s ease,transform .15s ease,background .15s ease;position:relative}
+  .variant:hover{transform:translateY(-2px);border-color:#46465d}
+  .variant.selected{border-color:var(--pink);background:linear-gradient(145deg,rgba(255,61,138,.08),rgba(139,61,255,.05))}
+  .best-tag{position:absolute;right:10px;top:10px;color:var(--void);background:var(--acid);font:700 8px 'JetBrains Mono',monospace;padding:4px 7px;border-radius:100px;letter-spacing:.04em}
+  .variant-letter{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--card-2);font:700 12px 'JetBrains Mono',monospace;margin-bottom:12px}
+  .variant.selected .variant-letter{background:var(--grad);color:var(--void)}
+  .variant-name{font:700 13px 'Space Grotesk',sans-serif}
+  .variant-hook{color:var(--muted);font-size:11.5px;line-height:1.42;margin:7px 0 13px;min-height:49px}
+  .score-line{display:flex;align-items:center;gap:8px}
+  .score{font:700 20px 'JetBrains Mono',monospace;color:var(--acid)}
+  .score small{font-size:9px;color:var(--muted-2)}
+  .score-bars{flex:1;display:grid;gap:4px}
+  .mini-track{height:4px;border-radius:100px;background:var(--card-2);overflow:hidden}
+  .mini-fill{height:100%;background:var(--grad);border-radius:100px}
+  .variant-metrics{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:12px}
+  .metric{border-top:1px solid var(--line);padding-top:8px}
+  .metric b{display:block;font:700 11px 'JetBrains Mono',monospace;color:var(--text)}
+  .metric span{color:var(--muted-2);font-size:8.5px;text-transform:uppercase;letter-spacing:.05em}
+
+  .edit-plan{margin-top:14px;border:1px solid var(--line);border-radius:17px;overflow:hidden}
+  .edit-plan-head{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;background:var(--card-2);border-bottom:1px solid var(--line)}
+  .edit-plan-title{font:700 12px 'Space Grotesk',sans-serif}
+  .selected-badge{font:700 9px 'JetBrains Mono',monospace;color:var(--pink)}
+  .edit-list{display:grid;grid-template-columns:1fr 1fr}
+  .edit-item{padding:11px 14px;border-bottom:1px solid var(--line);display:flex;gap:9px;align-items:flex-start}
+  .edit-item:nth-child(odd){border-right:1px solid var(--line)}
+  .edit-item:nth-last-child(-n+2){border-bottom:0}
+  .timecode{font:700 9.5px 'JetBrains Mono',monospace;color:var(--orange);flex-shrink:0;margin-top:2px}
+  .edit-text{font-size:11px;color:var(--muted);line-height:1.35}
+  .edit-text b{color:var(--text)}
+  .result-actions{display:flex;gap:8px;margin-top:14px}
+  .secondary-btn{padding:12px 14px;background:var(--void-2);border:1px solid var(--line);color:var(--text);font-size:11.5px}
+  .secondary-btn:hover{border-color:var(--purple)}
+  .result-actions .primary-btn{margin-top:0;width:auto;flex:1;padding:12px 14px}
+
+  .loop-section{margin:84px 0 20px}
+  .section-intro{text-align:center;max-width:620px;margin:0 auto 30px}
+  .section-intro .step-tag{color:var(--acid)}
+  .section-intro h2{font:700 clamp(27px,4vw,40px)/1.05 'Space Grotesk',sans-serif;letter-spacing:-.04em;margin-bottom:10px}
+  .section-intro p{color:var(--muted);font-size:14px;line-height:1.55}
+  .loop-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .loop-card{background:rgba(21,21,32,.75);border:1px solid var(--line);border-radius:18px;padding:20px;position:relative;overflow:hidden}
+  .loop-no{font:700 10px 'JetBrains Mono',monospace;color:var(--pink);margin-bottom:22px}
+  .loop-card h3{font:700 15px 'Space Grotesk',sans-serif;margin-bottom:7px}
+  .loop-card p{font-size:12px;color:var(--muted);line-height:1.5}
+  .loop-arrow{position:absolute;right:12px;top:14px;color:var(--muted-2);font-size:17px}
+
+  footer{border-top:1px solid var(--line);margin-top:70px;padding:28px 0;display:flex;justify-content:space-between;gap:20px;color:var(--muted-2);font:500 10.5px 'JetBrains Mono',monospace}
+  footer a{color:var(--muted);text-decoration:none}
+
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(5,5,10,.78);backdrop-filter:blur(8px);z-index:20;align-items:center;justify-content:center;padding:18px}
+  .modal-bg.active{display:flex}
+  .modal{width:min(470px,100%);background:var(--card);border:1px solid var(--line);border-radius:24px;padding:24px;box-shadow:0 30px 100px rgba(0,0,0,.45)}
+  .modal-icon{width:46px;height:46px;border-radius:14px;background:rgba(201,255,61,.1);display:grid;place-items:center;color:var(--acid);font-size:20px;margin-bottom:16px}
+  .modal h2{font:700 21px 'Space Grotesk',sans-serif;margin-bottom:7px}
+  .modal p{color:var(--muted);font-size:12.5px;line-height:1.55}
+  .checklist{display:grid;gap:8px;margin:18px 0}
+  .check{display:flex;gap:9px;align-items:center;border:1px solid var(--line);background:var(--void-2);padding:10px 12px;border-radius:11px;color:var(--muted);font-size:11.5px}
+  .check span{color:var(--acid)}
+  .modal-actions{display:flex;gap:8px}
+  .modal-actions button{margin:0}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,18px);opacity:0;background:var(--card);border:1px solid var(--line);color:var(--text);font-size:12px;padding:11px 18px;border-radius:100px;z-index:30;transition:.22s ease;pointer-events:none;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+  .toast.active{opacity:1;transform:translate(-50%,0)}
+
+  @media(max-width:900px){
+    .app-grid{grid-template-columns:1fr}
+    .workspace{min-height:620px}
+    .loop-grid{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:650px){
+    .shell{width:min(100% - 24px,1120px)}
+    nav{height:auto;padding:20px 0;align-items:flex-start}
+    .navlinks{flex-wrap:wrap;justify-content:flex-end}
+    .navlink{display:none}.navlink.active{display:block}
+    .hero{padding:42px 0 34px}
+    h1{font-size:43px}
+    .hero p{font-size:14px}
+    .workspace-body{padding:14px}
+    .personal-strip{grid-template-columns:1fr 1fr}
+    .signal-card.primary{grid-column:1/-1}
+    .variants{grid-template-columns:1fr}
+    .variant-hook{min-height:auto}
+    .edit-list{grid-template-columns:1fr}
+    .edit-item,.edit-item:nth-child(odd){border-right:0;border-bottom:1px solid var(--line)}
+    .edit-item:last-child{border-bottom:0}
+    .result-actions{flex-direction:column}.result-actions .primary-btn{width:100%}
+    .loop-grid{grid-template-columns:1fr}
+    footer{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+<div class="blob one"></div>
+<div class="blob two"></div>
+<div class="blob three"></div>
+
+<div class="shell">
+  <nav>
+    <a class="logo" href="index.html"><span class="logo-dot"></span>TrendDrop</a>
+    <div class="navlinks">
+      <a class="navlink" href="index.html">Trend Radar</a>
+      <a class="navlink active" href="viral-brain.html">✦ Viral Brain</a>
+      <button class="pro-pill" id="proBtn">GO PRO</button>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="eyebrow">Personal creator intelligence · no bots</div>
+    <h1>Train on your content.<br><span>Test before you post.</span></h1>
+    <p>Viral Brain learns the patterns behind your strongest Reels, rebuilds a new draft into three versions, and prepares real-audience Trial Reels.</p>
+    <div class="truth-row">
+      <span class="truth-chip good">✓ Real audience signals</span>
+      <span class="truth-chip">No fake views</span>
+      <span class="truth-chip">Learns your account</span>
+      <span class="truth-chip">Improves every post</span>
+    </div>
+  </header>
+
+  <main class="app-grid" id="lab">
+    <aside class="panel controls">
+      <div class="panel-head">
+        <div class="step-tag">Viral Brain setup</div>
+        <div class="panel-title">Build your next Reel</div>
+        <p class="panel-copy">Connect the account you want Viral Brain to learn from, then add a draft.</p>
+      </div>
+
+      <div class="control-section">
+        <span class="label">1 · Learn your account</span>
+        <button class="connect-btn" id="connectBtn">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+          Connect Instagram
+        </button>
+        <div class="account-preview" id="accountPreview">
+          <div class="avatar">TD</div>
+          <div>
+            <div class="account-name">Demo creator</div>
+            <div class="account-meta">24 REELS · 90 DAYS</div>
+          </div>
+          <div class="scan-state">✓</div>
+        </div>
+      </div>
+
+      <div class="control-section">
+        <span class="label">2 · Add your draft</span>
+        <input class="topic-input" id="topicInput" type="text" maxlength="90" placeholder="What is this Reel about?" autocomplete="off">
+        <div class="upload-zone" id="uploadZone" role="button" tabindex="0" aria-label="Upload a draft video">
+          <div class="upload-icon">↥</div>
+          <div class="upload-title">Drop your Reel draft</div>
+          <div class="upload-sub">MP4, MOV or WebM · up to 90 seconds</div>
+        </div>
+        <input id="videoInput" type="file" accept="video/mp4,video/quicktime,video/webm,video/*" hidden>
+        <button class="demo-link" id="demoBtn">or analyze a demo Reel →</button>
+        <div class="file-card" id="fileCard">
+          <div class="file-thumb" id="fileThumb">▶</div>
+          <div class="file-info">
+            <div class="file-name" id="fileName"></div>
+            <div class="file-meta" id="fileMeta"></div>
+          </div>
+          <button class="remove-file" id="removeFile" aria-label="Remove video">✕</button>
+        </div>
+        <button class="primary-btn" id="analyzeBtn" disabled>Analyze viral potential →</button>
+        <p class="privacy-note">The current static prototype uses sample Instagram insights. Real OAuth, video AI and publishing are the backend phase.</p>
+      </div>
+    </aside>
+
+    <section class="panel workspace" aria-live="polite">
+      <div class="workspace-top">
+        <div class="workspace-title">Personal Virality Lab</div>
+        <div class="status" id="workspaceStatus">WAITING FOR A DRAFT</div>
+      </div>
+      <div class="workspace-body">
+        <div class="empty-state" id="emptyState">
+          <div>
+            <div class="brain-orb"><span class="brain-glyph">V</span></div>
+            <h2>Your Viral Brain is waiting</h2>
+            <p>It will compare your new draft with the hooks, pacing and formats that already earn attention on your account.</p>
+            <div class="empty-steps">
+              <span class="empty-step">01 · Learn</span>
+              <span class="empty-step">02 · Improve</span>
+              <span class="empty-step">03 · Test</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="analysis-state" id="analysisState">
+          <div>
+            <div class="scan-orb" id="scanOrb"><span class="scan-percent" id="scanPercent">0%</span></div>
+            <h2 id="analysisTitle">Watching your draft…</h2>
+            <p class="analysis-copy" id="analysisCopy">Mapping the first three seconds frame by frame.</p>
+            <div class="analysis-list" id="analysisList">
+              <div class="analysis-item"><span class="analysis-mark">○</span>Reading the spoken and on-screen hook</div>
+              <div class="analysis-item"><span class="analysis-mark">○</span>Measuring pace, cuts and dead air</div>
+              <div class="analysis-item"><span class="analysis-mark">○</span>Comparing with your past winners</div>
+              <div class="analysis-item"><span class="analysis-mark">○</span>Building three Trial Reel variants</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="results" id="results">
+          <div class="personal-strip">
+            <div class="signal-card primary">
+              <div class="signal-label">Your strongest pattern</div>
+              <div class="signal-value">Face + bold claim in the first 1.4s</div>
+            </div>
+            <div class="signal-card">
+              <div class="signal-label">Best length</div>
+              <div class="signal-value number">18s</div>
+            </div>
+            <div class="signal-card">
+              <div class="signal-label">Best opening</div>
+              <div class="signal-value">Contrarian</div>
+            </div>
+            <div class="signal-card">
+              <div class="signal-label">Share trigger</div>
+              <div class="signal-value">Relatable twist</div>
+            </div>
+          </div>
+
+          <div class="result-head">
+            <div>
+              <h2>Three versions built for you</h2>
+              <p>Select one to see its exact edit plan.</p>
+            </div>
+            <span class="model-tag">PERSONAL MODEL · 24 REELS</span>
+          </div>
+
+          <div class="variants" id="variants"></div>
+
+          <div class="edit-plan">
+            <div class="edit-plan-head">
+              <div class="edit-plan-title" id="editPlanTitle">Variant A · Hook-first cut</div>
+              <span class="selected-badge">SELECTED FOR TRIAL</span>
+            </div>
+            <div class="edit-list" id="editList"></div>
+          </div>
+
+          <div class="result-actions">
+            <button class="secondary-btn" id="downloadBrief">↓ Download edit brief</button>
+            <button class="secondary-btn" id="analyzeAgain">↻ New draft</button>
+            <button class="primary-btn" id="trialBtn">Review Trial Reel plan →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <section class="loop-section">
+    <div class="section-intro">
+      <div class="step-tag">The learning loop</div>
+      <h2>It gets smarter from real reactions.</h2>
+      <p>No generic “viral score” can understand every creator. TrendDrop learns from your content, validates with non-followers, and feeds the result back into your next Reel.</p>
+    </div>
+    <div class="loop-grid">
+      <article class="loop-card"><div class="loop-arrow">→</div><div class="loop-no">01 · LEARN</div><h3>Study past winners</h3><p>Find the hooks, lengths, topics and edit rhythms that worked on your account.</p></article>
+      <article class="loop-card"><div class="loop-arrow">→</div><div class="loop-no">02 · BUILD</div><h3>Create three cuts</h3><p>Turn one draft into focused variants instead of giving you vague advice.</p></article>
+      <article class="loop-card"><div class="loop-arrow">→</div><div class="loop-no">03 · TEST</div><h3>Use Trial Reels</h3><p>Show variants to real non-followers without manufacturing views or engagement.</p></article>
+      <article class="loop-card"><div class="loop-no">04 · IMPROVE</div><h3>Learn the winner</h3><p>Watch time, shares and saves teach the model what your audience wants next.</p></article>
+    </div>
+  </section>
+
+  <footer>
+    <span>TRENDDROP · FIND THE TREND, THEN MAKE IT YOURS</span>
+    <span><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="contact.html">Contact</a></span>
+  </footer>
+</div>
+
+<div class="modal-bg" id="trialModal">
+  <div class="modal">
+    <div class="modal-icon">✓</div>
+    <h2>Your experiment is ready</h2>
+    <p id="modalSummary">TrendDrop will prepare this cut as a Trial Reel and compare it with the other variants using real non-follower performance.</p>
+    <div class="checklist">
+      <div class="check"><span>✓</span> Selected edit plan attached</div>
+      <div class="check"><span>✓</span> Success metric: shares per 1,000 views</div>
+      <div class="check"><span>✓</span> Evaluation window: first 24–72 hours</div>
+      <div class="check"><span>✓</span> No artificial views or engagement</div>
+    </div>
+    <p>The frontend flow is complete. Instagram OAuth, media processing and Trial Reel publishing must be connected before this can publish to a real account.</p>
+    <div class="modal-actions" style="margin-top:18px">
+      <button class="secondary-btn" id="closeModal">Close</button>
+      <button class="primary-btn" id="backendBtn">Backend-ready ✓</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Done</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  let accountConnected = false;
+  let draftReady = false;
+  let demoMode = false;
+  let videoDuration = 22;
+  let videoObjectUrl = null;
+  let selectedVariant = 0;
+  let currentTopic = 'a surprising creator lesson';
+
+  const variantBlueprints = [
+    {
+      name:'Hook-first cut',
+      hook: topic => `“Stop scrolling — ${topic} is not what you think.”`,
+      score:92, hold:'78%', completion:'64%',
+      edits:[
+        ['00:00','<b>Open on the payoff.</b> Remove the greeting and show the strongest visual first.'],
+        ['00:01','Add a six-word headline in the upper safe zone.'],
+        ['00:04','Cut the pause and switch angle on the first proof point.'],
+        ['00:16','End on the opening frame to create a clean loop.']
+      ]
+    },
+    {
+      name:'Relatable meme cut',
+      hook: topic => `“POV: you finally understand ${topic}.”`,
+      score:87, hold:'73%', completion:'69%',
+      edits:[
+        ['00:00','<b>Lead with the reaction.</b> Put the context after the visual joke.'],
+        ['00:02','Use a familiar meme beat under the first line.'],
+        ['00:07','Add a pattern interrupt with a fast zoom and caption change.'],
+        ['00:18','Finish with a send-this-to-someone prompt.']
+      ]
+    },
+    {
+      name:'Fast payoff cut',
+      hook: topic => `“Here is ${topic} in 15 seconds.”`,
+      score:83, hold:'70%', completion:'76%',
+      edits:[
+        ['00:00','<b>Promise the result.</b> Set an explicit 15-second expectation.'],
+        ['00:03','Compress the explanation into three visual beats.'],
+        ['00:09','Replace the second example with on-screen proof.'],
+        ['00:14','Hold the result for one second before the loop.']
+      ]
+    }
+  ];
+
+  function safeText(value){
+    const node = document.createElement('div');
+    node.textContent = value;
+    return node.innerHTML;
+  }
+
+  function showToast(message){
+    $('toast').textContent = message;
+    $('toast').classList.add('active');
+    clearTimeout(window.toastTimer);
+    window.toastTimer = setTimeout(() => $('toast').classList.remove('active'), 1900);
+  }
+
+  function updateAnalyzeButton(){
+    $('analyzeBtn').disabled = !(accountConnected && draftReady);
+  }
+
+  $('connectBtn').addEventListener('click', () => {
+    if(accountConnected) return;
+    const button = $('connectBtn');
+    button.textContent = 'Scanning your recent Reels…';
+    button.disabled = true;
+    setTimeout(() => {
+      accountConnected = true;
+      button.textContent = '✓ Instagram connected';
+      button.classList.add('connected');
+      $('accountPreview').classList.add('active');
+      updateAnalyzeButton();
+      showToast('24 demo Reels learned');
+    }, 900);
+  });
+
+  function openPicker(){ $('videoInput').click(); }
+  $('uploadZone').addEventListener('click', openPicker);
+  $('uploadZone').addEventListener('keydown', event => {
+    if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); openPicker(); }
+  });
+  ['dragenter','dragover'].forEach(type => $('uploadZone').addEventListener(type,event => {
+    event.preventDefault(); $('uploadZone').classList.add('drag');
+  }));
+  ['dragleave','drop'].forEach(type => $('uploadZone').addEventListener(type,event => {
+    event.preventDefault(); $('uploadZone').classList.remove('drag');
+  }));
+  $('uploadZone').addEventListener('drop', event => {
+    const file = event.dataTransfer.files && event.dataTransfer.files[0];
+    if(file) useVideoFile(file);
+  });
+  $('videoInput').addEventListener('change', event => {
+    const file = event.target.files && event.target.files[0];
+    if(file) useVideoFile(file);
+  });
+
+  function useVideoFile(file){
+    if(!file.type.startsWith('video/')){
+      showToast('Please choose a video file'); return;
+    }
+    if(file.size > 250 * 1024 * 1024){
+      showToast('Keep the prototype upload under 250 MB'); return;
+    }
+    demoMode = false;
+    draftReady = true;
+    if(videoObjectUrl) URL.revokeObjectURL(videoObjectUrl);
+    videoObjectUrl = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    video.src = videoObjectUrl;
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'metadata';
+    video.addEventListener('loadedmetadata', () => {
+      videoDuration = Number.isFinite(video.duration) ? video.duration : 22;
+      $('fileMeta').textContent = `${formatBytes(file.size)} · ${Math.round(videoDuration)}s`;
+    });
+    $('fileThumb').replaceChildren(video);
+    $('fileName').textContent = file.name;
+    $('fileMeta').textContent = `${formatBytes(file.size)} · reading duration…`;
+    $('fileCard').classList.add('active');
+    updateAnalyzeButton();
+  }
+
+  function formatBytes(bytes){
+    if(bytes < 1024 * 1024) return `${Math.max(1,Math.round(bytes/1024))} KB`;
+    return `${(bytes/(1024*1024)).toFixed(1)} MB`;
+  }
+
+  $('demoBtn').addEventListener('click', () => {
+    demoMode = true;
+    draftReady = true;
+    videoDuration = 21;
+    if(!$('topicInput').value.trim()) $('topicInput').value = 'why switching between AI tools wastes your memory';
+    $('fileThumb').textContent = '▶';
+    $('fileName').textContent = 'demo-creator-reel.mp4';
+    $('fileMeta').textContent = '8.4 MB · 21s · demo';
+    $('fileCard').classList.add('active');
+    if(!accountConnected) $('connectBtn').click();
+    setTimeout(updateAnalyzeButton,950);
+  });
+
+  $('removeFile').addEventListener('click', () => {
+    draftReady = false;
+    demoMode = false;
+    $('videoInput').value = '';
+    $('fileCard').classList.remove('active');
+    $('fileThumb').textContent = '▶';
+    if(videoObjectUrl){ URL.revokeObjectURL(videoObjectUrl); videoObjectUrl = null; }
+    updateAnalyzeButton();
+  });
+
+  $('analyzeBtn').addEventListener('click', runAnalysis);
+
+  function runAnalysis(){
+    currentTopic = $('topicInput').value.trim() || 'this creator idea';
+    $('emptyState').style.display = 'none';
+    $('results').classList.remove('active');
+    $('analysisState').classList.add('active');
+    $('workspaceStatus').textContent = 'ANALYZING DRAFT';
+    $('workspaceStatus').classList.remove('ready');
+    const items = [...document.querySelectorAll('.analysis-item')];
+    items.forEach(item => { item.classList.remove('done'); item.querySelector('.analysis-mark').textContent='○'; });
+    const stages = [
+      [18,'Reading your opening hook…','Separating spoken words, captions and the first visual promise.'],
+      [42,'Measuring attention shifts…','Finding pauses, repeated frames and moments viewers may swipe away.'],
+      [68,'Comparing your winners…','Matching this draft with the patterns that performed on your account.'],
+      [88,'Building three variants…','Creating different hooks, pacing and payoff structures.'],
+      [100,'Your test is ready','Ranking each cut for personal fit, hold and completion.']
+    ];
+    let index = 0;
+    const advance = () => {
+      const [progress,title,copy] = stages[index];
+      $('scanOrb').style.setProperty('--progress',`${progress}%`);
+      $('scanPercent').textContent = `${progress}%`;
+      $('analysisTitle').textContent = title;
+      $('analysisCopy').textContent = copy;
+      if(index > 0 && items[index-1]){
+        items[index-1].classList.add('done');
+        items[index-1].querySelector('.analysis-mark').textContent='✓';
+      }
+      index++;
+      if(index < stages.length) setTimeout(advance,520);
+      else setTimeout(showResults,520);
+    };
+    advance();
+  }
+
+  function adjustedScore(base,index){
+    const durationFit = videoDuration >= 10 && videoDuration <= 30 ? 2 : videoDuration > 60 ? -6 : -2;
+    const topicFit = currentTopic.length >= 8 ? 1 : -2;
+    return Math.max(55,Math.min(96,base + durationFit + topicFit - (index === 2 && videoDuration > 30 ? 2 : 0)));
+  }
+
+  function showResults(){
+    $('analysisState').classList.remove('active');
+    $('workspaceStatus').textContent = '3 VARIANTS READY';
+    $('workspaceStatus').classList.add('ready');
+    renderVariants();
+    selectVariant(0);
+    $('results').classList.add('active');
+  }
+
+  function renderVariants(){
+    $('variants').innerHTML = variantBlueprints.map((variant,index) => {
+      const score = adjustedScore(variant.score,index);
+      return `<article class="variant ${index===0?'selected':''}" data-index="${index}">
+        ${index===0?'<span class="best-tag">BEST FIT</span>':''}
+        <div class="variant-letter">${String.fromCharCode(65+index)}</div>
+        <div class="variant-name">${safeText(variant.name)}</div>
+        <div class="variant-hook">${safeText(variant.hook(currentTopic))}</div>
+        <div class="score-line">
+          <div class="score">${score}<small>/100</small></div>
+          <div class="score-bars"><div class="mini-track"><div class="mini-fill" style="width:${score}%"></div></div><div class="mini-track"><div class="mini-fill" style="width:${Math.max(40,score-8)}%"></div></div></div>
+        </div>
+        <div class="variant-metrics">
+          <div class="metric"><b>${variant.hold}</b><span>3s hold</span></div>
+          <div class="metric"><b>${variant.completion}</b><span>completion</span></div>
+        </div>
+      </article>`;
+    }).join('');
+    document.querySelectorAll('.variant').forEach(card => card.addEventListener('click', () => selectVariant(Number(card.dataset.index))));
+  }
+
+  function selectVariant(index){
+    selectedVariant = index;
+    document.querySelectorAll('.variant').forEach((card,i) => card.classList.toggle('selected',i===index));
+    const variant = variantBlueprints[index];
+    $('editPlanTitle').textContent = `Variant ${String.fromCharCode(65+index)} · ${variant.name}`;
+    $('editList').innerHTML = variant.edits.map(([time,copy]) => `<div class="edit-item"><span class="timecode">${time}</span><span class="edit-text">${copy}</span></div>`).join('');
+  }
+
+  $('downloadBrief').addEventListener('click', () => {
+    const variant = variantBlueprints[selectedVariant];
+    const brief = [
+      'TRENDDROP VIRAL BRAIN — EDIT BRIEF',
+      `Topic: ${currentTopic}`,
+      `Selected: Variant ${String.fromCharCode(65+selectedVariant)} — ${variant.name}`,
+      `Personal fit score: ${adjustedScore(variant.score,selectedVariant)}/100`,
+      `Hook: ${variant.hook(currentTopic)}`,
+      '',
+      'EDIT PLAN',
+      ...variant.edits.map(([time,copy]) => `${time} — ${copy.replace(/<[^>]+>/g,'')}`),
+      '',
+      'TRIAL SUCCESS METRICS',
+      'Primary: shares per 1,000 real views',
+      'Secondary: 3-second hold and completion rate',
+      'Window: first 24–72 hours',
+      'Method: Instagram Trial Reel shown to non-followers; no artificial engagement.'
+    ].join('\n');
+    const blob = new Blob([brief],{type:'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'trenddrop-viral-brain-edit-brief.txt';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url),0);
+    showToast('Edit brief downloaded');
+  });
+
+  $('analyzeAgain').addEventListener('click', resetLab);
+  function resetLab(){
+    $('results').classList.remove('active');
+    $('emptyState').style.display = 'grid';
+    $('workspaceStatus').textContent = draftReady ? 'READY TO ANALYZE' : 'WAITING FOR A DRAFT';
+    $('workspaceStatus').classList.remove('ready');
+    $('topicInput').focus();
+    window.scrollTo({top:Math.max(0,$('lab').offsetTop-20),behavior:'smooth'});
+  }
+
+  $('trialBtn').addEventListener('click', () => {
+    const variant = variantBlueprints[selectedVariant];
+    $('modalSummary').textContent = `Variant ${String.fromCharCode(65+selectedVariant)} — ${variant.name} is ready for a real-audience Trial Reel experiment.`;
+    $('trialModal').classList.add('active');
+  });
+  $('closeModal').addEventListener('click', () => $('trialModal').classList.remove('active'));
+  $('backendBtn').addEventListener('click', () => {
+    $('trialModal').classList.remove('active');
+    showToast('Frontend ready for Instagram backend');
+  });
+  $('trialModal').addEventListener('click', event => {
+    if(event.target === $('trialModal')) $('trialModal').classList.remove('active');
+  });
+  $('proBtn').addEventListener('click', () => showToast('Pro checkout connection is next'));
+</script>
+</body>
+</html>

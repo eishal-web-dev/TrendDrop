@@ -6,7 +6,10 @@ TrendDrop is a daily-use tool for creators: pick a region, niche, and platform, 
 
 ## Status
 
-This repo currently contains a **static frontend demo** (`index.html`) — a fully working, click-through prototype of the product flow with realistic mock trend data. No backend yet.
+This repo currently contains a **static frontend demo** — a fully working, click-through prototype of the product flow with realistic mock trend data. No backend yet.
+
+- `index.html`: daily trend finder, trend score, hooks, scripts, saves and share cards
+- `viral-brain.html`: personal Reel analysis flow with a local video upload, creator-pattern summary, three scored edit variants, downloadable edit brief and Trial Reel plan
 
 Open `index.html` directly in a browser, or serve it:
 
@@ -20,6 +23,17 @@ npx serve .
 2. TrendDrop scores what's rising today
 3. Get one free video idea: trend, why-now, hook, structure, caption, hashtags
 4. Unlock more with Pro ($4.99/mo): 10–20 trends/day, all regions, full scripts, low-competition picks, save + alerts
+
+## Viral Brain flow
+
+1. Connect an Instagram creator account
+2. Learn patterns from recent Reels and their real performance signals
+3. Upload a new Reel draft
+4. Generate three creator-specific hook/edit variants
+5. Prepare the selected variant for a real-audience Instagram Trial Reel
+6. Feed watch time, completion, shares and saves back into the personal model
+
+The current page implements this as a transparent frontend prototype. It uses sample creator insights while accepting and previewing a real local video file. Instagram OAuth, media processing, AI inference, insights ingestion and Trial Reel publishing still require a backend.
 
 ## Trend scoring model (planned)
 
@@ -38,6 +52,11 @@ Signal sources (planned): Google Trends, YouTube trending/search velocity, Reddi
 - [ ] Stripe for Pro subscriptions
 - [ ] Shareable trend cards (viral loop)
 - [ ] "Predict tomorrow's trend" (Pro feature)
+- [x] Viral Brain frontend product flow
+- [ ] Instagram OAuth + Professional account connection
+- [ ] Media analysis pipeline (speech, on-screen text, cuts, pauses, safe zones)
+- [ ] Creator-specific ranking model trained from Reel insights
+- [ ] Trial Reel publishing + 24–72 hour experiment evaluation
 
 ## Stack (planned)
 
