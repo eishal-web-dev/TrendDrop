@@ -97,7 +97,7 @@ function uploadGeminiFile(uploadUrl, file, mimeType) {
       if (xhr.status >= 200 && xhr.status < 300) resolve(data || {});
       else reject(new Error(`Video upload failed (HTTP ${xhr.status || 'unknown'}).`));
     };
-    xhr.onerror = () => reject(new Error('The browser could not send the video to the AI provider. Check the connection and try again.'));
+    xhr.onerror = () => resolve({ corsBlocked: true });
     xhr.ontimeout = () => reject(new Error('The video upload timed out. Try a smaller file or a faster connection.'));
     xhr.send(file);
   });
@@ -277,9 +277,21 @@ async function runPipeline() {
     if (cancelRequested) return backToEmpty();
 
     const uploaded = await uploadGeminiFile(initData.uploadUrl, videoFile, uploadMimeType);
-    const fileUri = uploaded?.file?.uri;
-    const mimeType = uploaded?.file?.mimeType || uploadMimeType;
-    if (!fileUri) throw new Error('The AI provider did not confirm the upload.');
+    let fileUri = uploaded?.file?.uri;
+    let mimeType = uploaded?.file?.mimeType || uploadMimeType;
+    if (!fileUri) {
+      const resolveRes = await fetch('/api/video-upload-resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ displayName: initData.displayName, fileSizeBytes: videoFile.size, mimeType: uploadMimeType }),
+      });
+      const resolveData = await resolveRes.json();
+      if (!resolveRes.ok || !resolveData?.file?.uri) {
+        throw new Error(resolveData.detail ? `${resolveData.error} (${resolveData.detail})` : (resolveData.error || 'The AI provider did not confirm the upload.'));
+      }
+      fileUri = resolveData.file.uri;
+      mimeType = resolveData.file.mimeType || uploadMimeType;
+    }
     if (cancelRequested) return backToEmpty();
 
     setStage('speech', 22, 'Reading speech…', 'Transcribing what is actually said in your video.');

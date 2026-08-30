@@ -33,8 +33,10 @@ module.exports = async function handler(req, res) {
 
   const fileSizeBytes = Number(body.fileSizeBytes);
   const requestedMimeType = String(body.mimeType || '').toLowerCase();
-  const displayName = String(body.displayName || 'trenddrop-upload').slice(0, 80).replace(/[^\w.\- ]/g, '_');
-  const ext = displayName.includes('.') ? displayName.split('.').pop().toLowerCase() : '';
+  const originalDisplayName = String(body.displayName || 'trenddrop-upload').slice(0, 80).replace(/[^\w.\- ]/g, '_');
+  const uniquePrefix = `trenddrop-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+  const displayName = `${uniquePrefix}-${originalDisplayName}`.slice(0, 150);
+  const ext = originalDisplayName.includes('.') ? originalDisplayName.split('.').pop().toLowerCase() : '';
   const mimeType = ALLOWED_MIME.has(requestedMimeType)
     ? requestedMimeType
     : ({ mp4: 'video/mp4', m4v: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm' }[ext] || '');
@@ -81,7 +83,7 @@ module.exports = async function handler(req, res) {
       return send(res, 502, { error: 'The AI provider did not return an upload URL.' });
     }
 
-    return send(res, 200, { configured: true, uploadUrl });
+    return send(res, 200, { configured: true, uploadUrl, displayName });
   } catch (error) {
     if (error?.name === 'AbortError') return send(res, 504, { error: 'The AI provider took too long to respond.' });
     return send(res, 500, { error: 'Could not start the video upload.' });
