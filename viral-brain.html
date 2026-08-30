@@ -788,7 +788,7 @@
       });
       const analyzeData = await analyzeRes.json();
       if(analyzeData.configured === false){ showAiNotConfigured(); return; }
-      if(!analyzeRes.ok) throw new Error(analyzeData.error || 'Video analysis failed.');
+      if(!analyzeRes.ok) throw new Error(analyzeData.detail ? `${analyzeData.error} (${analyzeData.detail})` : (analyzeData.error || 'Video analysis failed.'));
 
       setStage(3,5,'Building three rewritten versions…','Turning the analysis into hook-first, meme, and fast-payoff cuts.');
       lastVideoAnalysis = analyzeData.analysis;

@@ -181,7 +181,16 @@ module.exports = async function handler(req, res) {
 
     if (!genRes.ok) {
       const errText = await genRes.text().catch(() => '');
-      return send(res, 502, { error: 'The AI provider could not analyze this video.', detail: errText.slice(0, 300) });
+      console.error('[video-analyze] Gemini generateContent failed', genRes.status, errText.slice(0, 500));
+      const locationBlocked = /user location is not supported/i.test(errText);
+      return send(res, 502, {
+        error: locationBlocked
+          ? 'Gemini is blocking requests from this server\u2019s region.'
+          : 'The AI provider could not analyze this video.',
+        detail: locationBlocked
+          ? 'Change "regions" in vercel.json to a Gemini-supported region such as "iad1" and redeploy.'
+          : `HTTP ${genRes.status}: ${errText.slice(0, 300)}`,
+      });
     }
 
     const genData = await genRes.json();

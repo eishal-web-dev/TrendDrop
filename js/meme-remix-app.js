@@ -273,7 +273,7 @@ async function runPipeline() {
     });
     const analyzeData = await analyzeRes.json();
     if (analyzeData.configured === false) return showAiNotConfigured();
-    if (!analyzeRes.ok) throw new Error(analyzeData.error || 'Video analysis failed.');
+    if (!analyzeRes.ok) throw new Error(analyzeData.detail ? `${analyzeData.error} (${analyzeData.detail})` : (analyzeData.error || 'Video analysis failed.'));
     if (cancelRequested) return backToEmpty();
 
     lastAnalysis = analyzeData.analysis;

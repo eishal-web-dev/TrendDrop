@@ -61,9 +61,14 @@ module.exports = async function handler(req, res) {
     if (!startRes.ok) {
       const errBody = await startRes.text().catch(() => '');
       console.error('[video-upload-init] Gemini start-upload failed', startRes.status, errBody.slice(0, 500));
+      const locationBlocked = /user location is not supported/i.test(errBody);
       return send(res, 502, {
-        error: 'Could not start the video upload with the AI provider.',
-        detail: `HTTP ${startRes.status}: ${errBody.slice(0, 300)}`,
+        error: locationBlocked
+          ? 'Gemini is blocking requests from this server\u2019s region.'
+          : 'Could not start the video upload with the AI provider.',
+        detail: locationBlocked
+          ? 'The Vercel function region (see vercel.json "regions") is currently in a country Gemini\u2019s API blocks, even though the same account works fine from a browser. Fix: change "regions" in vercel.json to a supported region such as "iad1" (US East) and redeploy.'
+          : `HTTP ${startRes.status}: ${errBody.slice(0, 300)}`,
       });
     }
 
