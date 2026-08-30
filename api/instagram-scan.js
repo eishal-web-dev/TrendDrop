@@ -75,6 +75,59 @@ async function reelPreviewFromUrl(value, signal) {
   const parts = parsed.pathname.split('/').filter(Boolean);
   if (!['p', 'reel', 'reels'].includes((parts[0] || '').toLowerCase())) return null;
 
+  const shortcode = parts[1] || '';
+  const isVideo = ['reel', 'reels'].includes((parts[0] || '').toLowerCase());
+  const oembedUrl = new URL('https://www.instagram.com/api/v1/oembed/');
+  oembedUrl.searchParams.set('url', parsed.toString());
+  const oembedResponse = await fetch(oembedUrl, {
+    signal,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; TrendDrop/1.0; +https://trenddrop-delta.vercel.app)',
+      'Accept': 'application/json',
+      'Accept-Language': 'en-US,en;q=0.9'
+    }
+  });
+
+  if (oembedResponse.ok) {
+    const oembed = await oembedResponse.json();
+    const username = String(oembed.author_name || '').replace(/^@/, '').toLowerCase();
+    if (/^[a-z0-9._]{1,30}$/i.test(username)) {
+      const caption = String(oembed.title || '').trim();
+      const media = {
+        shortcode,
+        url: parsed.toString(),
+        kind: isVideo ? 'Reel' : 'Post',
+        isVideo,
+        thumbnail: String(oembed.thumbnail_url || ''),
+        caption: caption.slice(0, 700),
+        firstLine: caption.split('\n').find(Boolean)?.slice(0, 180) || 'Visual-first post',
+        likes: 0,
+        comments: 0,
+        views: 0,
+        duration: 0,
+        timestamp: 0,
+        audio: '',
+        opening: openingType(caption),
+        performance: caption.length
+      };
+      return {
+        username,
+        profile: {
+          username,
+          fullName: username,
+          biography: '',
+          profilePicture: '',
+          followers: 0,
+          following: 0,
+          totalPosts: 0,
+          isVerified: false,
+          isProfessional: false
+        },
+        media
+      };
+    }
+  }
+
   const response = await fetch(parsed.toString(), {
     signal,
     redirect: 'follow',
@@ -95,8 +148,6 @@ async function reelPreviewFromUrl(value, signal) {
   const description = decodeEntities(getMeta(html, 'og:description') || getMeta(html, 'description'));
   const metricMatch = description.match(/^([\d,.]+\s*[kmb]?) likes,\s*([\d,.]+\s*[kmb]?) comments\s*-\s*[^:]+:\s*["“]?([\s\S]*)/i);
   const caption = String(metricMatch?.[3] || description || '').replace(/["”]\s*$/, '').trim();
-  const shortcode = parts[1] || '';
-  const isVideo = ['reel', 'reels'].includes((parts[0] || '').toLowerCase());
   const media = {
     shortcode,
     url: parsed.toString(),
