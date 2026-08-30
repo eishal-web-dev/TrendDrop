@@ -1,0 +1,85 @@
+name: Fix Gemini CORS upload resolution
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-gemini-cors-resolution.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Patch upload resolution flow
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              s = p.read_text()
+              n = s.count(old)
+              if n != 1:
+                  raise SystemExit(f'{path}: expected 1 match, found {n} for {old[:120]!r}')
+              p.write_text(s.replace(old, new, 1))
+
+          # Give every Gemini upload a unique display name and return it to the browser.
+          replace_once('api/video-upload-init.js',
+            "  const requestedMimeType = String(body.mimeType || '').toLowerCase();\n  const displayName = String(body.displayName || 'trenddrop-upload').slice(0, 80).replace(/[^\\w.\\- ]/g, '_');\n  const ext = displayName.includes('.') ? displayName.split('.').pop().toLowerCase() : '';",
+            "  const requestedMimeType = String(body.mimeType || '').toLowerCase();\n  const originalDisplayName = String(body.displayName || 'trenddrop-upload').slice(0, 80).replace(/[^\\w.\\- ]/g, '_');\n  const uniquePrefix = `trenddrop-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;\n  const displayName = `${uniquePrefix}-${originalDisplayName}`.slice(0, 150);\n  const ext = originalDisplayName.includes('.') ? originalDisplayName.split('.').pop().toLowerCase() : '';")
+          replace_once('api/video-upload-init.js',
+            "    return send(res, 200, { configured: true, uploadUrl });",
+            "    return send(res, 200, { configured: true, uploadUrl, displayName });")
+
+          # Meme Remix: CORS blocks reading Gemini's final POST response, not the upload itself.
+          replace_once('js/meme-remix-app.js',
+            "    xhr.onerror = () => reject(new Error('The browser could not send the video to the AI provider. Check the connection and try again.'));",
+            "    xhr.onerror = () => resolve({ corsBlocked: true });")
+          replace_once('js/meme-remix-app.js',
+            "    const uploaded = await uploadGeminiFile(initData.uploadUrl, videoFile, uploadMimeType);\n    const fileUri = uploaded?.file?.uri;\n    const mimeType = uploaded?.file?.mimeType || uploadMimeType;\n    if (!fileUri) throw new Error('The AI provider did not confirm the upload.');",
+            "    const uploaded = await uploadGeminiFile(initData.uploadUrl, videoFile, uploadMimeType);\n    let fileUri = uploaded?.file?.uri;\n    let mimeType = uploaded?.file?.mimeType || uploadMimeType;\n    if (!fileUri) {\n      const resolveRes = await fetch('/api/video-upload-resolve', {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify({ displayName: initData.displayName, fileSizeBytes: videoFile.size, mimeType: uploadMimeType }),\n      });\n      const resolveData = await resolveRes.json();\n      if (!resolveRes.ok || !resolveData?.file?.uri) {\n        throw new Error(resolveData.detail ? `${resolveData.error} (${resolveData.detail})` : (resolveData.error || 'The AI provider did not confirm the upload.'));\n      }\n      fileUri = resolveData.file.uri;\n      mimeType = resolveData.file.mimeType || uploadMimeType;\n    }")
+
+          # Viral Brain: same resolver fallback.
+          replace_once('viral-brain.html',
+            "      xhr.onerror = () => reject(new Error('The browser could not send the video to the AI provider. Check the connection and try again.'));",
+            "      xhr.onerror = () => resolve({ corsBlocked: true });")
+          replace_once('viral-brain.html',
+            "      const uploaded = await uploadGeminiFile(initData.uploadUrl, videoFile, uploadMimeType);\n      const fileUri = uploaded?.file?.uri;\n      const mimeType = uploaded?.file?.mimeType || uploadMimeType;\n      if(!fileUri) throw new Error('The AI provider did not confirm the upload.');",
+            "      const uploaded = await uploadGeminiFile(initData.uploadUrl, videoFile, uploadMimeType);\n      let fileUri = uploaded?.file?.uri;\n      let mimeType = uploaded?.file?.mimeType || uploadMimeType;\n      if(!fileUri){\n        const resolveRes = await fetch('/api/video-upload-resolve',{\n          method:'POST',\n          headers:{'Content-Type':'application/json'},\n          body:JSON.stringify({displayName:initData.displayName,fileSizeBytes:videoFile.size,mimeType:uploadMimeType})\n        });\n        const resolveData = await resolveRes.json();\n        if(!resolveRes.ok || !resolveData?.file?.uri){\n          throw new Error(resolveData.detail ? `${resolveData.error} (${resolveData.detail})` : (resolveData.error || 'The AI provider did not confirm the upload.'));\n        }\n        fileUri = resolveData.file.uri;\n        mimeType = resolveData.file.mimeType || uploadMimeType;\n      }")
+
+          # Remove temporary diagnostic route now that the cause is proven.
+          p = Path('api/debug-gemini-post-cors.js')
+          if p.exists(): p.unlink()
+
+      - name: Syntax checks
+        run: |
+          node --check api/video-upload-init.js
+          node --check api/video-upload-resolve.js
+          node --check js/meme-remix-app.js
+          python - <<'PY'
+          from pathlib import Path
+          s = Path('viral-brain.html').read_text()
+          start = s.rfind('<script>')
+          end = s.rfind('</script>')
+          assert start != -1 and end > start
+          Path('/tmp/viral-brain-inline.js').write_text(s[start+8:end])
+          PY
+          node --check /tmp/viral-brain-inline.js
+          grep -q "video-upload-resolve" js/meme-remix-app.js
+          grep -q "video-upload-resolve" viral-brain.html
+          grep -q "uploadUrl, displayName" api/video-upload-init.js
+
+      - name: Commit fix
+        run: |
+          git config user.name "TrendDrop CORS Fix"
+          git config user.email "actions@github.com"
+          git add -A
+          git commit -m "Resolve Gemini uploads server-side after browser CORS block"
+          git push origin HEAD:main
