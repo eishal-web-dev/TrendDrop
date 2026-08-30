@@ -1,13 +1,34 @@
 {
-  "regions": ["iad1"],
+  "regions": [
+    "iad1"
+  ],
   "functions": {
-    "api/instagram-scan.js": { "maxDuration": 30 },
-    "api/reel-batch-scan.js": { "maxDuration": 45 },
-    "api/video-upload-init.js": { "maxDuration": 20 },
-    "api/video-analyze.js": { "maxDuration": 60 },
-    "api/instagram-oauth-start.js": { "maxDuration": 10 },
-    "api/instagram-oauth-callback.js": { "maxDuration": 20 },
-    "api/instagram-account.js": { "maxDuration": 15 },
-    "api/instagram-disconnect.js": { "maxDuration": 10 }
+    "api/instagram-scan.js": {
+      "maxDuration": 30
+    },
+    "api/reel-batch-scan.js": {
+      "maxDuration": 45
+    },
+    "api/video-upload-init.js": {
+      "maxDuration": 20
+    },
+    "api/video-analyze.js": {
+      "maxDuration": 60
+    },
+    "api/instagram-oauth-start.js": {
+      "maxDuration": 10
+    },
+    "api/instagram-oauth-callback.js": {
+      "maxDuration": 20
+    },
+    "api/instagram-account.js": {
+      "maxDuration": 15
+    },
+    "api/instagram-disconnect.js": {
+      "maxDuration": 10
+    },
+    "api/video-upload-chunk.js": {
+      "maxDuration": 60
+    }
   }
 }

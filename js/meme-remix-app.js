@@ -83,24 +83,49 @@ function normalizeVideoMime(file) {
   return VIDEO_MIME_BY_EXT[ext] || '';
 }
 
-function uploadGeminiFile(uploadUrl, file, mimeType) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', uploadUrl, true);
-    xhr.setRequestHeader('Content-Type', mimeType);
-    xhr.setRequestHeader('X-Goog-Upload-Offset', '0');
-    xhr.setRequestHeader('X-Goog-Upload-Command', 'upload, finalize');
-    xhr.timeout = 180000;
-    xhr.onload = () => {
-      let data = null;
-      try { data = JSON.parse(xhr.responseText || '{}'); } catch {}
-      if (xhr.status >= 200 && xhr.status < 300) resolve(data || {});
-      else reject(new Error(`Video upload failed (HTTP ${xhr.status || 'unknown'}).`));
-    };
-    xhr.onerror = () => resolve({ corsBlocked: true });
-    xhr.ontimeout = () => reject(new Error('The video upload timed out. Try a smaller file or a faster connection.'));
-    xhr.send(file);
-  });
+async function uploadGeminiFile(uploadUrl, uploadToken, file, mimeType) {
+  const CHUNK_BYTES = 2 * 1024 * 1024;
+  let offset = 0;
+  let finalData = null;
+
+  while (offset < file.size) {
+    const end = Math.min(offset + CHUNK_BYTES, file.size);
+    const isFinal = end >= file.size;
+    const chunk = file.slice(offset, end);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 90000);
+
+    let response;
+    try {
+      response = await fetch('/api/video-upload-chunk', {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'X-TrendDrop-Upload-Url': uploadUrl,
+          'X-TrendDrop-Upload-Token': uploadToken,
+          'X-TrendDrop-Upload-Offset': String(offset),
+          'X-TrendDrop-Upload-Final': isFinal ? '1' : '0',
+        },
+        body: chunk,
+      });
+    } catch (error) {
+      if (error?.name === 'AbortError') throw new Error('A video upload chunk timed out. Please retry.');
+      throw new Error('TrendDrop could not upload this video chunk. Please retry.');
+    } finally {
+      clearTimeout(timer);
+    }
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.detail ? `${data.error} (${data.detail})` : (data.error || `Video upload failed (HTTP ${response.status}).`));
+    }
+
+    if (isFinal) finalData = data;
+    offset = end;
+  }
+
+  return finalData || {};
 }
 
 function openPicker() { $('videoInput').click(); }
@@ -273,10 +298,10 @@ async function runPipeline() {
     });
     const initData = await initRes.json();
     if (initData.configured === false) return showAiNotConfigured();
-    if (!initRes.ok || !initData.uploadUrl) throw new Error(initData.detail ? `${initData.error} (${initData.detail})` : (initData.error || 'Could not start the upload.'));
+    if (!initRes.ok || !initData.uploadUrl || !initData.uploadToken) throw new Error(initData.detail ? `${initData.error} (${initData.detail})` : (initData.error || 'Could not start the upload.'));
     if (cancelRequested) return backToEmpty();
 
-    const uploaded = await uploadGeminiFile(initData.uploadUrl, videoFile, uploadMimeType);
+    const uploaded = await uploadGeminiFile(initData.uploadUrl, initData.uploadToken, videoFile, uploadMimeType);
     let fileUri = uploaded?.file?.uri;
     let mimeType = uploaded?.file?.mimeType || uploadMimeType;
     if (!fileUri) {

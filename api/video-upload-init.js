@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { send, parseBody, rateLimit, clientKey, withTimeout } = require('./_lib/http');
 
 const MAX_BYTES = 200 * 1024 * 1024; // generous ceiling; duration is the real gate, enforced client-side (<=180s)
@@ -83,7 +84,8 @@ module.exports = async function handler(req, res) {
       return send(res, 502, { error: 'The AI provider did not return an upload URL.' });
     }
 
-    return send(res, 200, { configured: true, uploadUrl, displayName });
+    const uploadToken = crypto.createHmac('sha256', apiKey).update(uploadUrl).digest('hex');
+    return send(res, 200, { configured: true, uploadUrl, uploadToken, displayName });
   } catch (error) {
     if (error?.name === 'AbortError') return send(res, 504, { error: 'The AI provider took too long to respond.' });
     return send(res, 500, { error: 'Could not start the video upload.' });
