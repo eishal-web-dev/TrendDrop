@@ -67,9 +67,19 @@
   .connect-btn{color:var(--text);background:linear-gradient(100deg,rgba(255,61,138,.18),rgba(139,61,255,.18));border:1px solid rgba(255,61,138,.35);padding:13px 15px;display:flex;align-items:center;justify-content:center;gap:9px}
   .connect-btn:hover,.primary-btn:hover{transform:translateY(-1px)}
   .connect-btn.connected{color:var(--acid);border-color:rgba(201,255,61,.3);background:rgba(201,255,61,.07);cursor:default}
+  .link-scan{display:flex;gap:7px}
+  .instagram-input{min-width:0;flex:1;background:var(--void-2);border:1px solid var(--line);color:var(--text);padding:12px 12px;border-radius:12px;outline:none;font-size:12px}
+  .instagram-input:focus{border-color:var(--pink)}
+  .scan-profile-btn{flex-shrink:0;border:0;border-radius:12px;padding:0 13px;background:var(--grad);color:var(--void);font:700 10.5px 'Space Grotesk',sans-serif;cursor:pointer;letter-spacing:.02em}
+  .scan-profile-btn:disabled{opacity:.45;cursor:wait}
+  .scan-help{font-size:10.5px;color:var(--muted-2);line-height:1.45;margin-top:8px}
+  .scan-error{display:none;font-size:10.5px;color:#ff8fae;line-height:1.4;margin-top:8px}
+  .scan-error.active{display:block}
+  .full-connect{display:block;width:100%;border:0;background:none;color:var(--cyan);font-size:10.5px;font-weight:700;cursor:pointer;margin-top:10px;padding:3px}
   .account-preview{display:none;align-items:center;gap:11px;margin-top:12px;padding:11px;border-radius:14px;background:var(--void-2);border:1px solid var(--line)}
   .account-preview.active{display:flex}
-  .avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--grad);font:700 14px 'Space Grotesk',sans-serif;color:#0a0a12}
+  .avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--grad);font:700 14px 'Space Grotesk',sans-serif;color:#0a0a12;overflow:hidden;flex-shrink:0}
+  .avatar img{width:100%;height:100%;object-fit:cover}
   .account-name{font-weight:700;font-size:13px}
   .account-meta{font:500 10px 'JetBrains Mono',monospace;color:var(--muted);margin-top:3px}
   .scan-state{margin-left:auto;color:var(--acid);font-size:16px}
@@ -93,6 +103,7 @@
   .primary-btn{margin-top:12px;padding:14px 16px;color:var(--void);background:var(--grad);text-transform:uppercase;font:700 12px 'Space Grotesk',sans-serif;letter-spacing:.03em}
   .primary-btn:disabled{opacity:.38;cursor:not-allowed;transform:none}
   .privacy-note{font-size:10.5px;color:var(--muted-2);line-height:1.45;margin-top:10px;text-align:center}
+  .public-badge{color:var(--acid);font:700 9px 'JetBrains Mono',monospace;margin-top:4px}
 
   .workspace{min-height:674px;overflow:hidden}
   .workspace-top{padding:19px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -137,6 +148,7 @@
   .result-head h2{font:700 21px 'Space Grotesk',sans-serif;letter-spacing:-.02em}
   .result-head p{color:var(--muted);font-size:11.5px;margin-top:4px}
   .model-tag{font:700 9.5px 'JetBrains Mono',monospace;color:var(--cyan);white-space:nowrap}
+  .source-note{margin:0 0 14px;padding:10px 12px;border-radius:12px;border:1px solid rgba(85,216,255,.2);background:rgba(85,216,255,.05);color:var(--muted);font-size:10.5px;line-height:1.45}
   .variants{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
   .variant{background:var(--void-2);border:1px solid var(--line);border-radius:17px;padding:14px;cursor:pointer;transition:border-color .15s ease,transform .15s ease,background .15s ease;position:relative}
   .variant:hover{transform:translateY(-2px);border-color:#46465d}
@@ -247,7 +259,7 @@
   <header class="hero">
     <div class="eyebrow">Personal creator intelligence · no bots</div>
     <h1>Train on your content.<br><span>Test before you post.</span></h1>
-    <p>Viral Brain learns the patterns behind your strongest Reels, rebuilds a new draft into three versions, and prepares real-audience Trial Reels.</p>
+    <p>Paste a public Instagram profile or Reel link. Viral Brain reads the account's visible content patterns, rebuilds a new draft into three versions, and prepares a focused test.</p>
     <div class="truth-row">
       <span class="truth-chip good">✓ Real audience signals</span>
       <span class="truth-chip">No fake views</span>
@@ -261,20 +273,24 @@
       <div class="panel-head">
         <div class="step-tag">Viral Brain setup</div>
         <div class="panel-title">Build your next Reel</div>
-        <p class="panel-copy">Connect the account you want Viral Brain to learn from, then add a draft.</p>
+        <p class="panel-copy">Scan a public profile without logging in, then add the Reel you want to improve.</p>
       </div>
 
       <div class="control-section">
-        <span class="label">1 · Learn your account</span>
-        <button class="connect-btn" id="connectBtn">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
-          Connect Instagram
-        </button>
+        <span class="label">1 · Paste your Instagram</span>
+        <div class="link-scan">
+          <input class="instagram-input" id="instagramInput" type="text" maxlength="250" placeholder="instagram.com/yourname" autocomplete="off" inputmode="url">
+          <button class="scan-profile-btn" id="scanProfileBtn">QUICK SCAN</button>
+        </div>
+        <p class="scan-help">Works with a public profile, @username or public Reel link. No password needed.</p>
+        <p class="scan-error" id="scanError"></p>
+        <button class="full-connect" id="connectBtn">Need private insights? Full connection comes later →</button>
         <div class="account-preview" id="accountPreview">
-          <div class="avatar">TD</div>
+          <div class="avatar" id="accountAvatar">TD</div>
           <div>
-            <div class="account-name">Demo creator</div>
-            <div class="account-meta">24 REELS · 90 DAYS</div>
+            <div class="account-name" id="accountName">Demo creator</div>
+            <div class="account-meta" id="accountMeta">12 PUBLIC POSTS SCANNED</div>
+            <div class="public-badge">PUBLIC DATA ONLY</div>
           </div>
           <div class="scan-state">✓</div>
         </div>
@@ -299,7 +315,7 @@
           <button class="remove-file" id="removeFile" aria-label="Remove video">✕</button>
         </div>
         <button class="primary-btn" id="analyzeBtn" disabled>Analyze viral potential →</button>
-        <p class="privacy-note">The current static prototype uses sample Instagram insights. Real OAuth, video AI and publishing are the backend phase.</p>
+        <p class="privacy-note">Quick Scan uses public profile signals only. Upload analysis does not include private retention, saves or watch-time curves.</p>
       </div>
     </aside>
 
@@ -313,7 +329,7 @@
           <div>
             <div class="brain-orb"><span class="brain-glyph">V</span></div>
             <h2>Your Viral Brain is waiting</h2>
-            <p>It will compare your new draft with the hooks, pacing and formats that already earn attention on your account.</p>
+            <p>It will compare your draft topic and length with the openings, captions and public formats already earning attention on the scanned account.</p>
             <div class="empty-steps">
               <span class="empty-step">01 · Learn</span>
               <span class="empty-step">02 · Improve</span>
@@ -325,34 +341,35 @@
         <div class="analysis-state" id="analysisState">
           <div>
             <div class="scan-orb" id="scanOrb"><span class="scan-percent" id="scanPercent">0%</span></div>
-            <h2 id="analysisTitle">Watching your draft…</h2>
-            <p class="analysis-copy" id="analysisCopy">Mapping the first three seconds frame by frame.</p>
+            <h2 id="analysisTitle">Reading your creator pattern…</h2>
+            <p class="analysis-copy" id="analysisCopy">Matching this draft with the scanned profile's public winners.</p>
             <div class="analysis-list" id="analysisList">
-              <div class="analysis-item"><span class="analysis-mark">○</span>Reading the spoken and on-screen hook</div>
-              <div class="analysis-item"><span class="analysis-mark">○</span>Measuring pace, cuts and dead air</div>
-              <div class="analysis-item"><span class="analysis-mark">○</span>Comparing with your past winners</div>
+              <div class="analysis-item"><span class="analysis-mark">○</span>Reading the draft topic and duration</div>
+              <div class="analysis-item"><span class="analysis-mark">○</span>Finding winning public openings and captions</div>
+              <div class="analysis-item"><span class="analysis-mark">○</span>Comparing with the scanned profile's top posts</div>
               <div class="analysis-item"><span class="analysis-mark">○</span>Building three Trial Reel variants</div>
             </div>
           </div>
         </div>
 
         <div class="results" id="results">
+          <div class="source-note" id="sourceNote">Built from public profile signals. Private retention, shares and saves are not available without Instagram permission.</div>
           <div class="personal-strip">
             <div class="signal-card primary">
               <div class="signal-label">Your strongest pattern</div>
-              <div class="signal-value">Face + bold claim in the first 1.4s</div>
+              <div class="signal-value" id="strongestPattern">Bold statement + short-form payoff</div>
             </div>
             <div class="signal-card">
               <div class="signal-label">Best length</div>
-              <div class="signal-value number">18s</div>
+              <div class="signal-value number" id="bestLength">—</div>
             </div>
             <div class="signal-card">
               <div class="signal-label">Best opening</div>
-              <div class="signal-value">Contrarian</div>
+              <div class="signal-value" id="bestOpening">Visual-first</div>
             </div>
             <div class="signal-card">
               <div class="signal-label">Share trigger</div>
-              <div class="signal-value">Relatable twist</div>
+              <div class="signal-value" id="shareTrigger">Useful takeaway</div>
             </div>
           </div>
 
@@ -361,7 +378,7 @@
               <h2>Three versions built for you</h2>
               <p>Select one to see its exact edit plan.</p>
             </div>
-            <span class="model-tag">PERSONAL MODEL · 24 REELS</span>
+            <span class="model-tag" id="modelTag">PUBLIC MODEL · WAITING</span>
           </div>
 
           <div class="variants" id="variants"></div>
@@ -434,11 +451,14 @@
   let videoObjectUrl = null;
   let selectedVariant = 0;
   let currentTopic = 'a surprising creator lesson';
+  let profileScanData = null;
 
   const variantBlueprints = [
     {
       name:'Hook-first cut',
-      hook: topic => `“Stop scrolling — ${topic} is not what you think.”`,
+      hook: topic => profileScanData?.insights?.bestOpening === 'How-to'
+        ? `“Here is how ${topic} actually works.”`
+        : `“Stop scrolling — ${topic} is not what you think.”`,
       score:92, hold:'78%', completion:'64%',
       edits:[
         ['00:00','<b>Open on the payoff.</b> Remove the greeting and show the strongest visual first.'],
@@ -460,7 +480,7 @@
     },
     {
       name:'Fast payoff cut',
-      hook: topic => `“Here is ${topic} in 15 seconds.”`,
+      hook: topic => `“Here is ${topic} in ${Math.min(20,profileScanData?.insights?.bestLength || 15)} seconds.”`,
       score:83, hold:'70%', completion:'76%',
       edits:[
         ['00:00','<b>Promise the result.</b> Set an explicit 15-second expectation.'],
@@ -488,19 +508,95 @@
     $('analyzeBtn').disabled = !(accountConnected && draftReady);
   }
 
-  $('connectBtn').addEventListener('click', () => {
-    if(accountConnected) return;
-    const button = $('connectBtn');
-    button.textContent = 'Scanning your recent Reels…';
+  function compactNumber(value){
+    return new Intl.NumberFormat('en',{notation:'compact',maximumFractionDigits:1}).format(Number(value || 0));
+  }
+
+  function setAccountPreview(data){
+    const profile = data.profile;
+    const initials = (profile.fullName || profile.username || 'IG')
+      .split(/\s+/).slice(0,2).map(part => part[0]).join('').toUpperCase();
+    $('accountAvatar').textContent = initials || 'IG';
+    if(profile.profilePicture){
+      const image = document.createElement('img');
+      image.src = profile.profilePicture;
+      image.alt = '';
+      image.referrerPolicy = 'no-referrer';
+      image.addEventListener('error',() => $('accountAvatar').textContent = initials || 'IG');
+      $('accountAvatar').replaceChildren(image);
+    }
+    $('accountName').textContent = `@${profile.username}${profile.isVerified ? ' ✓' : ''}`;
+    $('accountMeta').textContent = `${data.scannedPosts} POSTS · ${compactNumber(profile.followers)} FOLLOWERS`;
+    $('accountPreview').classList.add('active');
+  }
+
+  function applyProfileInsights(data){
+    const insights = data.insights || {};
+    $('strongestPattern').textContent = insights.strongestPattern || 'Public content pattern';
+    $('bestLength').textContent = insights.bestLength ? `${Math.round(insights.bestLength)}s` : '—';
+    $('bestOpening').textContent = insights.bestOpening || 'Visual-first';
+    $('shareTrigger').textContent = insights.shareTrigger || 'Useful takeaway';
+    $('modelTag').textContent = `PUBLIC MODEL · ${data.scannedPosts} POSTS`;
+    $('sourceNote').textContent = data.availability === 'single-reel-fallback'
+      ? `Instagram limited the full profile scan, so this result uses the one public Reel you pasted from @${data.profile.username}. Paste the profile later to retry more posts.`
+      : `Quick Scan read ${data.scannedPosts} public posts from @${data.profile.username}. It can use visible captions and engagement, but not private retention, shares or saves.`;
+  }
+
+  async function scanInstagramProfile(){
+    const source = $('instagramInput').value.trim();
+    if(!source){
+      $('scanError').textContent = 'Paste your public profile, @username or Reel link first.';
+      $('scanError').classList.add('active');
+      $('instagramInput').focus();
+      return;
+    }
+
+    const button = $('scanProfileBtn');
+    const original = button.textContent;
     button.disabled = true;
-    setTimeout(() => {
+    button.textContent = 'SCANNING…';
+    $('scanError').classList.remove('active');
+
+    try{
+      const response = await fetch('/api/instagram-scan',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({url:source})
+      });
+      const data = await response.json().catch(() => ({}));
+      if(!response.ok) throw new Error(data.error || 'The public scan failed.');
+      profileScanData = data;
       accountConnected = true;
-      button.textContent = '✓ Instagram connected';
-      button.classList.add('connected');
-      $('accountPreview').classList.add('active');
+      setAccountPreview(data);
+      applyProfileInsights(data);
       updateAnalyzeButton();
-      showToast('24 demo Reels learned');
-    }, 900);
+      button.textContent = '✓ SCANNED';
+      showToast(`${data.scannedPosts} public posts learned`);
+    }catch(error){
+      accountConnected = false;
+      profileScanData = null;
+      $('accountPreview').classList.remove('active');
+      $('scanError').textContent = error.message;
+      $('scanError').classList.add('active');
+      button.textContent = original;
+      updateAnalyzeButton();
+    }finally{
+      button.disabled = false;
+    }
+  }
+
+  $('scanProfileBtn').addEventListener('click',scanInstagramProfile);
+  $('instagramInput').addEventListener('keydown',event => {
+    if(event.key === 'Enter') scanInstagramProfile();
+  });
+  $('instagramInput').addEventListener('input',() => {
+    $('scanError').classList.remove('active');
+    if(profileScanData && $('instagramInput').value.trim() !== `@${profileScanData.profile.username}`){
+      $('scanProfileBtn').textContent = 'QUICK SCAN';
+    }
+  });
+  $('connectBtn').addEventListener('click',() => {
+    showToast('Full private-insights connection is the next phase');
   });
 
   function openPicker(){ $('videoInput').click(); }
@@ -555,6 +651,25 @@
     return `${(bytes/(1024*1024)).toFixed(1)} MB`;
   }
 
+  function loadDemoAccount(){
+    profileScanData = {
+      profile:{username:'demo.creator',fullName:'Demo creator',followers:18400,isVerified:false,profilePicture:''},
+      scannedPosts:12,
+      insights:{
+        strongestPattern:'Contrarian opening + Reel payoff',
+        bestLength:18,
+        bestOpening:'Contrarian',
+        shareTrigger:'Relatable moment',
+        topTopic:'switching AI tools wastes your memory'
+      }
+    };
+    accountConnected = true;
+    setAccountPreview(profileScanData);
+    applyProfileInsights(profileScanData);
+    $('instagramInput').value = '@demo.creator';
+    $('scanProfileBtn').textContent = 'DEMO';
+  }
+
   $('demoBtn').addEventListener('click', () => {
     demoMode = true;
     draftReady = true;
@@ -564,8 +679,9 @@
     $('fileName').textContent = 'demo-creator-reel.mp4';
     $('fileMeta').textContent = '8.4 MB · 21s · demo';
     $('fileCard').classList.add('active');
-    if(!accountConnected) $('connectBtn').click();
-    setTimeout(updateAnalyzeButton,950);
+    if(!accountConnected) loadDemoAccount();
+    updateAnalyzeButton();
+    showToast('Demo profile and draft ready');
   });
 
   $('removeFile').addEventListener('click', () => {
@@ -581,7 +697,7 @@
   $('analyzeBtn').addEventListener('click', runAnalysis);
 
   function runAnalysis(){
-    currentTopic = $('topicInput').value.trim() || 'this creator idea';
+    currentTopic = $('topicInput').value.trim() || profileScanData?.insights?.topTopic || 'this creator idea';
     $('emptyState').style.display = 'none';
     $('results').classList.remove('active');
     $('analysisState').classList.add('active');
@@ -590,9 +706,9 @@
     const items = [...document.querySelectorAll('.analysis-item')];
     items.forEach(item => { item.classList.remove('done'); item.querySelector('.analysis-mark').textContent='○'; });
     const stages = [
-      [18,'Reading your opening hook…','Separating spoken words, captions and the first visual promise.'],
-      [42,'Measuring attention shifts…','Finding pauses, repeated frames and moments viewers may swipe away.'],
-      [68,'Comparing your winners…','Matching this draft with the patterns that performed on your account.'],
+      [18,'Reading your draft setup…','Measuring the topic and duration supplied for this Reel.'],
+      [42,'Finding public winners…','Ranking visible posts by their public engagement signals.'],
+      [68,'Comparing creator patterns…','Matching this draft with the openings and captions used by top posts.'],
       [88,'Building three variants…','Creating different hooks, pacing and payoff structures.'],
       [100,'Your test is ready','Ranking each cut for personal fit, hold and completion.']
     ];

@@ -9,7 +9,8 @@ TrendDrop is a daily-use tool for creators: pick a region, niche, and platform, 
 This repo currently contains a **static frontend demo** — a fully working, click-through prototype of the product flow with realistic mock trend data. No backend yet.
 
 - `index.html`: daily trend finder, trend score, hooks, scripts, saves and share cards
-- `viral-brain.html`: personal Reel analysis flow with a local video upload, creator-pattern summary, three scored edit variants, downloadable edit brief and Trial Reel plan
+- `viral-brain.html`: public Instagram profile/Reel Quick Scan, local draft upload, creator-pattern summary, three scored edit variants, downloadable edit brief and Trial Reel plan
+- `api/instagram-scan.js`: no-login public profile scanner that returns a small, sanitized set of visible account/media signals
 
 Open `index.html` directly in a browser, or serve it:
 
@@ -26,14 +27,14 @@ npx serve .
 
 ## Viral Brain flow
 
-1. Connect an Instagram creator account
-2. Learn patterns from recent Reels and their real performance signals
+1. Paste a public Instagram profile, @username or Reel URL
+2. Learn patterns from up to 12 currently visible public posts/Reels
 3. Upload a new Reel draft
 4. Generate three creator-specific hook/edit variants
 5. Prepare the selected variant for a real-audience Instagram Trial Reel
 6. Feed watch time, completion, shares and saves back into the personal model
 
-The current page implements this as a transparent frontend prototype. It uses sample creator insights while accepting and previewing a real local video file. Instagram OAuth, media processing, AI inference, insights ingestion and Trial Reel publishing still require a backend.
+Quick Scan is a beta public-data feature and can be limited or rate-limited by Instagram. It only uses visible profile/media fields such as captions, public likes/comments/views and duration when exposed; it cannot read retention, shares, saves, audience breakdowns or private accounts. The local draft currently supplies its topic and duration to the edit-variant generator. Full frame/audio AI, Instagram OAuth, private insights ingestion and Trial Reel publishing remain later phases.
 
 ## Trend scoring model (planned)
 
@@ -53,7 +54,8 @@ Signal sources (planned): Google Trends, YouTube trending/search velocity, Reddi
 - [ ] Shareable trend cards (viral loop)
 - [ ] "Predict tomorrow's trend" (Pro feature)
 - [x] Viral Brain frontend product flow
-- [ ] Instagram OAuth + Professional account connection
+- [x] No-login public Instagram profile/Reel Quick Scan (beta)
+- [ ] Instagram OAuth + Professional account connection for private insights
 - [ ] Media analysis pipeline (speech, on-screen text, cuts, pauses, safe zones)
 - [ ] Creator-specific ranking model trained from Reel insights
 - [ ] Trial Reel publishing + 24–72 hour experiment evaluation
