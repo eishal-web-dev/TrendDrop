@@ -378,3 +378,5 @@ async function renderMemeRemix({ videoFile, editDecision, onProgress }) {
 if (typeof window !== 'undefined') {
   window.TrendDropMemePipeline = { renderMemeRemix, loadFFmpeg, detectSilence };
 }
+
+export { renderMemeRemix, loadFFmpeg, detectSilence };
