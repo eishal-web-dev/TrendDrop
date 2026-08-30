@@ -290,7 +290,7 @@
           <div>
             <div class="account-name" id="accountName">Demo creator</div>
             <div class="account-meta" id="accountMeta">12 PUBLIC POSTS SCANNED</div>
-            <div class="public-badge">PUBLIC DATA ONLY</div>
+            <div class="public-badge" id="accountMode">PUBLIC DATA ONLY</div>
           </div>
           <div class="scan-state">✓</div>
         </div>
@@ -514,6 +514,7 @@
 
   function setAccountPreview(data){
     const profile = data.profile;
+    const singleReelMode = data.availability === 'single-reel-fallback';
     const initials = (profile.fullName || profile.username || 'IG')
       .split(/\s+/).slice(0,2).map(part => part[0]).join('').toUpperCase();
     $('accountAvatar').textContent = initials || 'IG';
@@ -526,7 +527,10 @@
       $('accountAvatar').replaceChildren(image);
     }
     $('accountName').textContent = `@${profile.username}${profile.isVerified ? ' ✓' : ''}`;
-    $('accountMeta').textContent = `${data.scannedPosts} POSTS · ${compactNumber(profile.followers)} FOLLOWERS`;
+    $('accountMeta').textContent = singleReelMode
+      ? '1 REEL SCANNED · PROFILE STATS UNAVAILABLE'
+      : `${data.scannedPosts} RECENT POSTS · ${compactNumber(profile.followers)} FOLLOWERS`;
+    $('accountMode').textContent = singleReelMode ? 'SINGLE-REEL MODE' : 'PUBLIC PROFILE MODE';
     $('accountPreview').classList.add('active');
   }
 
@@ -536,9 +540,11 @@
     $('bestLength').textContent = insights.bestLength ? `${Math.round(insights.bestLength)}s` : '—';
     $('bestOpening').textContent = insights.bestOpening || 'Visual-first';
     $('shareTrigger').textContent = insights.shareTrigger || 'Useful takeaway';
-    $('modelTag').textContent = `PUBLIC MODEL · ${data.scannedPosts} POSTS`;
+    $('modelTag').textContent = data.availability === 'single-reel-fallback'
+      ? 'REEL MODEL · 1 LINK'
+      : `PUBLIC MODEL · ${data.scannedPosts} RECENT POSTS`;
     $('sourceNote').textContent = data.availability === 'single-reel-fallback'
-      ? `Instagram limited the full profile scan, so this result uses the one public Reel you pasted from @${data.profile.username}. Paste the profile later to retry more posts.`
+      ? `This is not your full account total. Instagram did not expose @${data.profile.username}'s profile list, so TrendDrop analyzed only the one Reel link you pasted. Follower count and the rest of your posts are unknown in this mode.`
       : `Quick Scan read ${data.scannedPosts} public posts from @${data.profile.username}. It can use visible captions and engagement, but not private retention, shares or saves.`;
   }
 
