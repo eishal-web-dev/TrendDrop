@@ -341,9 +341,9 @@
         <div class="upload-zone" id="uploadZone" role="button" tabindex="0" aria-label="Upload a draft video">
           <div class="upload-icon">↥</div>
           <div class="upload-title">Drop your Reel draft</div>
-          <div class="upload-sub">MP4, MOV or WebM · up to 90 seconds</div>
+          <div class="upload-sub">MP4, MOV or WebM · up to 3 minutes</div>
         </div>
-        <input id="videoInput" type="file" accept="video/mp4,video/quicktime,video/webm,video/*" hidden>
+        <input id="videoInput" type="file" accept="video/*,.mp4,.mov,.webm,.m4v" hidden>
         <button class="demo-link" id="demoBtn">or try sample demo data →</button>
         <div class="file-card" id="fileCard">
           <div class="file-thumb" id="fileThumb">▶</div>
@@ -665,10 +665,39 @@
   });
 
   const ALLOWED_TYPES = new Set(['video/mp4','video/quicktime','video/webm']);
+  const VIDEO_MIME_BY_EXT = {mp4:'video/mp4',m4v:'video/mp4',mov:'video/quicktime',webm:'video/webm'};
+
+  function normalizeVideoMime(file){
+    const type = String(file && file.type || '').toLowerCase();
+    if(ALLOWED_TYPES.has(type)) return type;
+    const name = String(file && file.name || '');
+    const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
+    return VIDEO_MIME_BY_EXT[ext] || '';
+  }
+
+  function uploadGeminiFile(uploadUrl, file, mimeType){
+    return new Promise((resolve,reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', uploadUrl, true);
+      xhr.setRequestHeader('Content-Type', mimeType);
+      xhr.setRequestHeader('X-Goog-Upload-Offset', '0');
+      xhr.setRequestHeader('X-Goog-Upload-Command', 'upload, finalize');
+      xhr.timeout = 180000;
+      xhr.onload = () => {
+        let data = null;
+        try{ data = JSON.parse(xhr.responseText || '{}'); }catch{}
+        if(xhr.status >= 200 && xhr.status < 300) resolve(data || {});
+        else reject(new Error(`Video upload failed (HTTP ${xhr.status || 'unknown'}).`));
+      };
+      xhr.onerror = () => reject(new Error('The browser could not send the video to the AI provider. Check the connection and try again.'));
+      xhr.ontimeout = () => reject(new Error('The video upload timed out. Try a smaller file or a faster connection.'));
+      xhr.send(file);
+    });
+  }
 
   function useVideoFile(file){
-    if(!ALLOWED_TYPES.has(file.type)){
-      showToast('Please choose an MP4, MOV, or WebM file'); return;
+    if(!normalizeVideoMime(file)){
+      showToast('Please choose an MP4, MOV, WebM, or M4V file'); return;
     }
     if(file.size > 200 * 1024 * 1024){
       showToast('Keep uploads under 200 MB'); return;
@@ -684,11 +713,11 @@
     video.preload = 'metadata';
     video.addEventListener('loadedmetadata', () => {
       videoDuration = Number.isFinite(video.duration) ? video.duration : null;
-      if(videoDuration && videoDuration > 90){
-        showToast(`This video is ${Math.round(videoDuration)}s — Video AI supports up to 90s. Trim it and re-upload.`);
+      if(videoDuration && videoDuration > 180){
+        showToast(`This video is ${Math.round(videoDuration)}s — Video AI supports up to 3 minutes. Trim it and re-upload.`);
         draftReady = false;
         updateAnalyzeButton();
-        $('fileMeta').textContent = `${formatBytes(file.size)} · ${Math.round(videoDuration)}s — too long, max 90s`;
+        $('fileMeta').textContent = `${formatBytes(file.size)} · ${Math.round(videoDuration)}s — too long, max 3 min`;
         return;
       }
       $('fileMeta').textContent = `${formatBytes(file.size)} · ${videoDuration ? Math.round(videoDuration)+'s' : 'duration unknown'}`;
@@ -751,10 +780,11 @@
     try{
       setStage(0,5,'Uploading video…','Sending your draft to the AI video analyzer.');
 
+      const uploadMimeType = normalizeVideoMime(videoFile);
       const initRes = await fetch('/api/video-upload-init',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({fileSizeBytes:videoFile.size, mimeType:videoFile.type, displayName:videoFile.name})
+        body:JSON.stringify({fileSizeBytes:videoFile.size, mimeType:uploadMimeType, displayName:videoFile.name})
       });
       const initData = await initRes.json();
       if(initData.configured === false){
@@ -763,18 +793,9 @@
       }
       if(!initRes.ok || !initData.uploadUrl) throw new Error(initData.detail ? `${initData.error} (${initData.detail})` : (initData.error || 'Could not start the upload.'));
 
-      const uploadRes = await fetch(initData.uploadUrl, {
-        method: 'POST',
-        headers: {
-          'X-Goog-Upload-Offset': '0',
-          'X-Goog-Upload-Command': 'upload, finalize'
-        },
-        body: videoFile
-      });
-      if(!uploadRes.ok) throw new Error('The video upload failed partway through.');
-      const uploaded = await uploadRes.json();
+      const uploaded = await uploadGeminiFile(initData.uploadUrl, videoFile, uploadMimeType);
       const fileUri = uploaded?.file?.uri;
-      const mimeType = uploaded?.file?.mimeType || videoFile.type;
+      const mimeType = uploaded?.file?.mimeType || uploadMimeType;
       if(!fileUri) throw new Error('The AI provider did not confirm the upload.');
 
       setStage(1,5,'Reading speech and on-screen text…','Gemini is watching the full video.');

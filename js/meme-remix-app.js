@@ -73,6 +73,35 @@ $('topicInput').addEventListener('input', () => {
 
 // ---------- Upload handling ----------
 const ALLOWED_TYPES = new Set(['video/mp4', 'video/quicktime', 'video/webm']);
+const VIDEO_MIME_BY_EXT = { mp4: 'video/mp4', m4v: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm' };
+
+function normalizeVideoMime(file) {
+  const type = String(file?.type || '').toLowerCase();
+  if (ALLOWED_TYPES.has(type)) return type;
+  const name = String(file?.name || '');
+  const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
+  return VIDEO_MIME_BY_EXT[ext] || '';
+}
+
+function uploadGeminiFile(uploadUrl, file, mimeType) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', uploadUrl, true);
+    xhr.setRequestHeader('Content-Type', mimeType);
+    xhr.setRequestHeader('X-Goog-Upload-Offset', '0');
+    xhr.setRequestHeader('X-Goog-Upload-Command', 'upload, finalize');
+    xhr.timeout = 180000;
+    xhr.onload = () => {
+      let data = null;
+      try { data = JSON.parse(xhr.responseText || '{}'); } catch {}
+      if (xhr.status >= 200 && xhr.status < 300) resolve(data || {});
+      else reject(new Error(`Video upload failed (HTTP ${xhr.status || 'unknown'}).`));
+    };
+    xhr.onerror = () => reject(new Error('The browser could not send the video to the AI provider. Check the connection and try again.'));
+    xhr.ontimeout = () => reject(new Error('The video upload timed out. Try a smaller file or a faster connection.'));
+    xhr.send(file);
+  });
+}
 
 function openPicker() { $('videoInput').click(); }
 $('uploadZone').addEventListener('click', openPicker);
@@ -88,7 +117,7 @@ function formatBytes(bytes) {
 }
 
 function useVideoFile(file) {
-  if (!ALLOWED_TYPES.has(file.type)) { showToast('Please choose an MP4, MOV, or WebM file'); return; }
+  if (!normalizeVideoMime(file)) { showToast('Please choose an MP4, MOV, WebM, or M4V file'); return; }
   if (file.size > 200 * 1024 * 1024) { showToast('Keep uploads under 200 MB'); return; }
   demoMode = false;
   videoFile = file;
@@ -97,11 +126,11 @@ function useVideoFile(file) {
   video.src = url; video.muted = true; video.playsInline = true; video.preload = 'metadata';
   video.addEventListener('loadedmetadata', () => {
     const duration = Number.isFinite(video.duration) ? video.duration : null;
-    if (duration && duration > 90) {
-      showToast(`This video is ${Math.round(duration)}s — Meme Remix supports up to 90s. Trim it and re-upload.`);
+    if (duration && duration > 180) {
+      showToast(`This video is ${Math.round(duration)}s — Meme Remix supports up to 3 minutes. Trim it and re-upload.`);
       videoFile = null;
       $('makeViralBtn').disabled = true;
-      $('fileMeta').textContent = `${formatBytes(file.size)} · ${Math.round(duration)}s — too long, max 90s`;
+      $('fileMeta').textContent = `${formatBytes(file.size)} · ${Math.round(duration)}s — too long, max 3 min`;
       return;
     }
     $('fileMeta').textContent = `${formatBytes(file.size)} · ${duration ? Math.round(duration) + 's' : 'duration unknown'}`;
@@ -236,28 +265,20 @@ async function runPipeline() {
 
   try {
     setStage('upload', 8, 'Uploading…', 'Sending your video to the AI analyzer.');
+    const uploadMimeType = normalizeVideoMime(videoFile);
     const initRes = await fetch('/api/video-upload-init', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fileSizeBytes: videoFile.size, mimeType: videoFile.type, displayName: videoFile.name }),
+      body: JSON.stringify({ fileSizeBytes: videoFile.size, mimeType: uploadMimeType, displayName: videoFile.name }),
     });
     const initData = await initRes.json();
     if (initData.configured === false) return showAiNotConfigured();
     if (!initRes.ok || !initData.uploadUrl) throw new Error(initData.detail ? `${initData.error} (${initData.detail})` : (initData.error || 'Could not start the upload.'));
     if (cancelRequested) return backToEmpty();
 
-    const uploadRes = await fetch(initData.uploadUrl, {
-      method: 'POST',
-      headers: {
-        'X-Goog-Upload-Offset': '0',
-        'X-Goog-Upload-Command': 'upload, finalize',
-      },
-      body: videoFile,
-    });
-    if (!uploadRes.ok) throw new Error('The video upload failed partway through.');
-    const uploaded = await uploadRes.json();
+    const uploaded = await uploadGeminiFile(initData.uploadUrl, videoFile, uploadMimeType);
     const fileUri = uploaded?.file?.uri;
-    const mimeType = uploaded?.file?.mimeType || videoFile.type;
+    const mimeType = uploaded?.file?.mimeType || uploadMimeType;
     if (!fileUri) throw new Error('The AI provider did not confirm the upload.');
     if (cancelRequested) return backToEmpty();
 

@@ -1,6 +1,6 @@
 const { send, parseBody, rateLimit, clientKey, withTimeout } = require('./_lib/http');
 
-const MAX_BYTES = 200 * 1024 * 1024; // generous ceiling; duration is the real gate, enforced client-side (<=90s)
+const MAX_BYTES = 200 * 1024 * 1024; // generous ceiling; duration is the real gate, enforced client-side (<=180s)
 const ALLOWED_MIME = new Set(['video/mp4', 'video/quicktime', 'video/webm']);
 
 /**
@@ -32,8 +32,12 @@ module.exports = async function handler(req, res) {
   if (!body) return send(res, 400, { error: 'Invalid request body.' });
 
   const fileSizeBytes = Number(body.fileSizeBytes);
-  const mimeType = String(body.mimeType || '');
+  const requestedMimeType = String(body.mimeType || '').toLowerCase();
   const displayName = String(body.displayName || 'trenddrop-upload').slice(0, 80).replace(/[^\w.\- ]/g, '_');
+  const ext = displayName.includes('.') ? displayName.split('.').pop().toLowerCase() : '';
+  const mimeType = ALLOWED_MIME.has(requestedMimeType)
+    ? requestedMimeType
+    : ({ mp4: 'video/mp4', m4v: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm' }[ext] || '');
 
   if (!Number.isFinite(fileSizeBytes) || fileSizeBytes <= 0 || fileSizeBytes > MAX_BYTES) {
     return send(res, 400, { error: 'File size is missing or too large.' });
