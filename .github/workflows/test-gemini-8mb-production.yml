@@ -1,0 +1,58 @@
+name: Test Gemini 8MB production upload
+
+on:
+  push:
+    paths:
+      - '.github/workflows/test-gemini-8mb-production.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create production upload session
+        run: |
+          set -euo pipefail
+          TOTAL=$((8388608 + 16))
+          curl -fsS -X POST 'https://trenddrop-delta.vercel.app/api/video-upload-init' \
+            -H 'Content-Type: application/json' \
+            --data "{\"fileSizeBytes\":${TOTAL},\"mimeType\":\"video/mp4\",\"displayName\":\"trenddrop-8mb-test.mp4\"}" > /tmp/init.json
+          jq -e '.configured == true' /tmp/init.json
+          jq -e '.chunkGranularityBytes == 8388608' /tmp/init.json
+          jq -r '.uploadUrl' /tmp/init.json > /tmp/url
+          jq -r '.uploadToken' /tmp/init.json > /tmp/token
+
+      - name: Upload first exact 8MB chunk
+        run: |
+          set -euo pipefail
+          dd if=/dev/zero of=/tmp/first.bin bs=1M count=8 status=none
+          URL="$(cat /tmp/url)"
+          curl -sS -X POST "$URL" \
+            -H 'Content-Type: video/mp4' \
+            -H 'X-Goog-Upload-Offset: 0' \
+            -H 'X-Goog-Upload-Command: upload' \
+            --data-binary '@/tmp/first.bin' > /tmp/first-response.txt
+
+      - name: Verify accepted offset through TrendDrop
+        run: |
+          set -euo pipefail
+          URL="$(cat /tmp/url)"
+          TOKEN="$(cat /tmp/token)"
+          jq -n --arg uploadUrl "$URL" --arg uploadToken "$TOKEN" '{uploadUrl:$uploadUrl,uploadToken:$uploadToken}' > /tmp/query-body.json
+          curl -fsS -X POST 'https://trenddrop-delta.vercel.app/api/video-upload-query' \
+            -H 'Content-Type: application/json' \
+            --data-binary '@/tmp/query-body.json' > /tmp/query.json
+          cat /tmp/query.json
+          jq -e '.sizeReceived == 8388608' /tmp/query.json
+
+      - name: Finalize with smaller final chunk
+        run: |
+          set -euo pipefail
+          printf '0123456789abcdef' > /tmp/final.bin
+          URL="$(cat /tmp/url)"
+          curl -fsS -X POST "$URL" \
+            -H 'Content-Type: video/mp4' \
+            -H 'X-Goog-Upload-Offset: 8388608' \
+            -H 'X-Goog-Upload-Command: upload, finalize' \
+            --data-binary '@/tmp/final.bin' > /tmp/final.json
+          cat /tmp/final.json
+          jq -e '.file.uri | startswith("https://generativelanguage.googleapis.com/")' /tmp/final.json
