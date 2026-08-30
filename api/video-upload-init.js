@@ -85,7 +85,11 @@ module.exports = async function handler(req, res) {
     }
 
     const uploadToken = crypto.createHmac('sha256', apiKey).update(uploadUrl).digest('hex');
-    return send(res, 200, { configured: true, uploadUrl, uploadToken, displayName });
+    const reportedGranularity = Number(startRes.headers.get('x-goog-upload-chunk-granularity') || 0);
+    const chunkGranularityBytes = Number.isFinite(reportedGranularity) && reportedGranularity > 0
+      ? reportedGranularity
+      : 8 * 1024 * 1024;
+    return send(res, 200, { configured: true, uploadUrl, uploadToken, displayName, chunkGranularityBytes });
   } catch (error) {
     if (error?.name === 'AbortError') return send(res, 504, { error: 'The AI provider took too long to respond.' });
     return send(res, 500, { error: 'Could not start the video upload.' });

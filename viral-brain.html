@@ -675,50 +675,98 @@
     return VIDEO_MIME_BY_EXT[ext] || '';
   }
 
-  async function uploadGeminiFile(uploadUrl, uploadToken, file, mimeType) {
-  const CHUNK_BYTES = 2 * 1024 * 1024;
-  let offset = 0;
-  let finalData = null;
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 
-  while (offset < file.size) {
-    const end = Math.min(offset + CHUNK_BYTES, file.size);
-    const isFinal = end >= file.size;
-    const chunk = file.slice(offset, end);
+  async function queryGeminiUpload(uploadUrl, uploadToken) {
+    const response = await fetch('/api/video-upload-query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uploadUrl, uploadToken }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.detail ? `${data.error} (${data.detail})` : (data.error || 'Could not confirm upload progress.'));
+    }
+    return data;
+  }
+
+  async function sendDirectGeminiChunk(uploadUrl, chunk, mimeType, offset, isFinal) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 90000);
-
-    let response;
+    const timer = setTimeout(() => controller.abort(), 150000);
     try {
-      response = await fetch('/api/video-upload-chunk', {
+      const response = await fetch(uploadUrl, {
         method: 'POST',
         signal: controller.signal,
         headers: {
-          'Content-Type': 'application/octet-stream',
-          'X-TrendDrop-Upload-Url': uploadUrl,
-          'X-TrendDrop-Upload-Token': uploadToken,
-          'X-TrendDrop-Upload-Offset': String(offset),
-          'X-TrendDrop-Upload-Final': isFinal ? '1' : '0',
+          'Content-Type': mimeType,
+          'X-Goog-Upload-Offset': String(offset),
+          'X-Goog-Upload-Command': isFinal ? 'upload, finalize' : 'upload',
         },
         body: chunk,
       });
-    } catch (error) {
-      if (error?.name === 'AbortError') throw new Error('A video upload chunk timed out. Please retry.');
-      throw new Error('TrendDrop could not upload this video chunk. Please retry.');
+      if (response.ok) {
+        let data = null;
+        if (isFinal) {
+          try { data = await response.json(); } catch {}
+        }
+        return { data };
+      }
+      return { data: null };
+    } catch {
+      // Firefox may hide Gemini's response because the upload response lacks CORS
+      // headers. TrendDrop verifies the actual byte offset through Vercel next.
+      return { data: null };
     } finally {
       clearTimeout(timer);
     }
-
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(data.detail ? `${data.error} (${data.detail})` : (data.error || `Video upload failed (HTTP ${response.status}).`));
-    }
-
-    if (isFinal) finalData = data;
-    offset = end;
   }
 
-  return finalData || {};
-}
+  async function uploadGeminiFile(uploadUrl, uploadToken, file, mimeType, reportedGranularity) {
+    const fallback = 8 * 1024 * 1024;
+    const parsed = Number(reportedGranularity);
+    const granularity = Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
+    let offset = 0;
+
+    while (offset < file.size) {
+      const remaining = file.size - offset;
+      const chunkLength = remaining > granularity ? granularity : remaining;
+      const end = offset + chunkLength;
+      const isFinal = end >= file.size;
+      const chunk = file.slice(offset, end);
+      let accepted = false;
+      let finalData = null;
+
+      for (let attempt = 0; attempt < 3 && !accepted; attempt++) {
+        const direct = await sendDirectGeminiChunk(uploadUrl, chunk, mimeType, offset, isFinal);
+        if (direct.data?.file?.uri) return direct.data;
+        finalData = direct.data || finalData;
+
+        for (let poll = 0; poll < 12; poll++) {
+          await sleep(poll === 0 ? 180 : 450);
+          const status = await queryGeminiUpload(uploadUrl, uploadToken);
+          const received = Number(status.sizeReceived || 0);
+          if (received >= end || (isFinal && status.status && status.status !== 'active')) {
+            accepted = true;
+            break;
+          }
+          if (received > offset && received < end) {
+            throw new Error(`The AI provider accepted only part of a video chunk (${received - offset} bytes). Please retry the upload.`);
+          }
+        }
+      }
+
+      if (!accepted) {
+        throw new Error(`The AI provider did not confirm video bytes ${offset}-${end}. Please retry.`);
+      }
+
+      offset = end;
+      if (isFinal) return finalData || {};
+    }
+
+    return {};
+  }
 
   function useVideoFile(file){
     if(!normalizeVideoMime(file)){
@@ -818,7 +866,7 @@
       }
       if(!initRes.ok || !initData.uploadUrl || !initData.uploadToken) throw new Error(initData.detail ? `${initData.error} (${initData.detail})` : (initData.error || 'Could not start the upload.'));
 
-      const uploaded = await uploadGeminiFile(initData.uploadUrl, initData.uploadToken, videoFile, uploadMimeType);
+      const uploaded = await uploadGeminiFile(initData.uploadUrl, initData.uploadToken, videoFile, uploadMimeType, initData.chunkGranularityBytes);
       let fileUri = uploaded?.file?.uri;
       let mimeType = uploaded?.file?.mimeType || uploadMimeType;
       if(!fileUri){

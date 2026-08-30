@@ -27,8 +27,8 @@
     "api/instagram-disconnect.js": {
       "maxDuration": 10
     },
-    "api/video-upload-chunk.js": {
-      "maxDuration": 60
+    "api/video-upload-query.js": {
+      "maxDuration": 20
     }
   }
 }
