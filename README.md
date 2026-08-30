@@ -6,17 +6,32 @@ TrendDrop is a daily-use tool for creators: pick a region, niche, and platform, 
 
 ## Status
 
-This repo currently contains a **static frontend demo** — a fully working, click-through prototype of the product flow with realistic mock trend data. No backend yet.
+`index.html` remains a **static frontend demo** with mock trend data — that part is unchanged.
 
-- `index.html`: daily trend finder, trend score, hooks, scripts, saves and share cards
-- `viral-brain.html`: public Instagram profile/Reel Quick Scan, local draft upload, creator-pattern summary, three scored edit variants, downloadable edit brief and Trial Reel plan
-- `api/instagram-scan.js`: no-login public profile scanner that returns a small, sanitized set of visible account/media signals
+`viral-brain.html` and the new `meme-remix.html` are genuine, working features backed by real serverless functions:
+
+- `viral-brain.html` — three real analysis modes:
+  - **Reel links**: paste 1–10 public Instagram Reel URLs, deduped and validated server-side, each fetched individually with honest per-link success/failure and a real cross-Reel comparison (repeated openings, CTA usage). Never presented as your full account history.
+  - **Connect IG**: real Instagram Business Login OAuth (`api.instagram.com` / `graph.instagram.com`, the current direct-login flow — not the deprecated Basic Display API). Tokens are AES-256-GCM encrypted into an httpOnly cookie server-side; never exposed to browser JS. Shows a clear "not configured" state without `META_APP_ID`/`META_APP_SECRET`/`META_REDIRECT_URI`/`COOKIE_SECRET`.
+  - **Upload video**: real Gemini 2.5 Flash video analysis via the Files API resumable-upload protocol — the API key never leaves the server, and the video itself never passes through a Vercel function body (avoiding the ~4.5MB payload limit). Returns real hook/pacing/moment analysis with qualitative Strong/Moderate/Weak labels, never fabricated percentages.
+- `meme-remix.html` — tag-based UI (platform/audience/language/meme style/video type/intensity/goal/caption style), reuses the same real Gemini video analysis, then genuinely renders a downloadable MP4 in the browser with `@ffmpeg/ffmpeg` (WASM): real burned-in captions from the actual transcript, real emotion-matched reaction overlays (original TrendDrop templates — no scraped/licensed meme clips), real zoom pattern interrupts, and real dead-air trimming via `silencedetect`. See **Meme Remix architecture notes** below for what's intentionally scoped down for v1.
+- `api/instagram-scan.js`: the original single-link/profile scanner, unchanged, still used as a fallback code path
 
 Open `index.html` directly in a browser, or serve it:
 
 ```bash
 npx serve .
 ```
+
+Deploy on Vercel as before; set the environment variables in `.env.example` under Project Settings for Modes B/C and Meme Remix to go live. Without them, both features run in an honest degraded state (Reel-link mode always works; Connect IG and Video AI show "not configured" instead of faking a result).
+
+### Meme Remix architecture notes
+
+- **Rendering happens entirely in the browser** via `@ffmpeg/ffmpeg` (WASM, loaded from jsDelivr, no server upload of the edited video) — this is the realistic free-tier architecture for actual video rendering; Vercel Functions cannot reliably render video within current payload/duration limits.
+- **Meme library**: ships with an original TrendDrop template set (`js/meme-templates.js`) — text + emoji reaction cards rendered on canvas, tagged by emotion and style (Pakistani drama, Bollywood, Desi chaotic, Global Gen Z, Savage, Deadpan, Cute, Cinematic comedy, Clean family-friendly, Maximum chaos). This is copyright-safe by construction. It does **not** include licensed Bollywood/desi pop-culture clips — sourcing and licensing those is a business decision for the repo owner, not something this build can do unilaterally. The template schema supports adding a `videoUrl` + `license` field per entry later to composite a real licensed clip instead of the canvas card.
+- **Dead-air trimming** is capped at 6 removed segments per render to keep the browser-side filter graph tractable; longer/more-frequent-pause videos will have some dead air remain.
+- **"Re-render with changes"** re-runs the full pipeline rather than patching just the edited section — genuine, just not incremental yet.
+- Known edge case: a completely silent source video combined with "remove dead air" intensity settings can fail the render (the audio-trim filter assumes an audio stream exists); documented rather than silently faking a fix.
 
 ## Product flow
 

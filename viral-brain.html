@@ -67,7 +67,22 @@
   .connect-btn{color:var(--text);background:linear-gradient(100deg,rgba(255,61,138,.18),rgba(139,61,255,.18));border:1px solid rgba(255,61,138,.35);padding:13px 15px;display:flex;align-items:center;justify-content:center;gap:9px}
   .connect-btn:hover,.primary-btn:hover{transform:translateY(-1px)}
   .connect-btn.connected{color:var(--acid);border-color:rgba(201,255,61,.3);background:rgba(201,255,61,.07);cursor:default}
+  .mode-tabs{display:flex;gap:6px;background:var(--void-2);border:1px solid var(--line);border-radius:12px;padding:4px}
+  .mode-tab{flex:1;border:0;background:none;color:var(--muted);font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.04em;padding:9px 6px;border-radius:9px;cursor:pointer}
+  .mode-tab.active{background:var(--grad);color:var(--void)}
+  .reel-link-row{position:relative;margin-bottom:7px}
+  .reel-link-row .remove-link{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted-2);cursor:pointer;font-size:13px;padding:4px}
   .link-scan{display:flex;gap:7px}
+  .link-status{font:600 10px 'JetBrains Mono',monospace;margin-top:6px;padding:7px 9px;border-radius:9px;background:var(--void-2);border:1px solid var(--line);color:var(--muted)}
+  .link-status.ok{color:var(--acid);border-color:rgba(201,255,61,.2)}
+  .link-status.fail{color:#ff8fae;border-color:rgba(255,143,174,.2)}
+  .comparison-box{margin-top:12px;padding:12px;border-radius:13px;background:var(--void-2);border:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.55}
+  .comparison-box b{color:var(--text)}
+  .moment-chip{display:inline-block;font:700 9px 'JetBrains Mono',monospace;color:var(--muted);border:1px solid var(--line);border-radius:100px;padding:4px 8px;margin:2px 4px 2px 0}
+  .strength-badge{font:700 9px 'JetBrains Mono',monospace;padding:3px 8px;border-radius:100px;letter-spacing:.04em}
+  .strength-badge.strong{color:var(--acid);background:rgba(201,255,61,.1)}
+  .strength-badge.moderate{color:var(--orange);background:rgba(255,138,61,.1)}
+  .strength-badge.weak{color:#ff8fae;background:rgba(255,143,174,.1)}
   .instagram-input{min-width:0;flex:1;background:var(--void-2);border:1px solid var(--line);color:var(--text);padding:12px 12px;border-radius:12px;outline:none;font-size:12px}
   .instagram-input:focus{border-color:var(--pink)}
   .scan-profile-btn{flex-shrink:0;border:0;border-radius:12px;padding:0 13px;background:var(--grad);color:var(--void);font:700 10.5px 'Space Grotesk',sans-serif;cursor:pointer;letter-spacing:.02em}
@@ -252,6 +267,7 @@
     <div class="navlinks">
       <a class="navlink" href="index.html">Trend Radar</a>
       <a class="navlink active" href="viral-brain.html">✦ Viral Brain</a>
+      <a class="navlink" href="meme-remix.html">🔥 Meme Remix</a>
       <button class="pro-pill" id="proBtn">GO PRO</button>
     </div>
   </nav>
@@ -259,12 +275,11 @@
   <header class="hero">
     <div class="eyebrow">Personal creator intelligence · no bots</div>
     <h1>Train on your content.<br><span>Test before you post.</span></h1>
-    <p>Paste a public Instagram Reel link—or try the profile-scan beta. Viral Brain reads visible content patterns, rebuilds a new draft into three versions, and prepares a focused test.</p>
+    <p>Paste up to 10 public Reel links, connect a professional Instagram account for permitted insights, or upload your draft for real frame/audio AI analysis.</p>
     <div class="truth-row">
-      <span class="truth-chip good">✓ Real audience signals</span>
-      <span class="truth-chip">No fake views</span>
-      <span class="truth-chip">Learns your account</span>
-      <span class="truth-chip">Improves every post</span>
+      <span class="truth-chip good">✓ Real analysis, no fake views</span>
+      <span class="truth-chip">Unavailable metrics say so</span>
+      <span class="truth-chip">1–10 Reels ≠ your whole account</span>
     </div>
   </header>
 
@@ -272,40 +287,64 @@
     <aside class="panel controls">
       <div class="panel-head">
         <div class="step-tag">Viral Brain setup</div>
-        <div class="panel-title">Build your next Reel</div>
-        <p class="panel-copy">Scan a public Reel without logging in, then add the draft you want to improve.</p>
+        <div class="panel-title">Choose your analysis source</div>
+        <p class="panel-copy">Public Reel links provide limited visible information. Connect a professional Instagram account for permitted account-wide insights, or upload the video for frame/audio analysis.</p>
       </div>
 
       <div class="control-section">
-        <span class="label">1 · Paste your Instagram</span>
-        <div class="link-scan">
-          <input class="instagram-input" id="instagramInput" type="text" maxlength="250" placeholder="instagram.com/reel/..." autocomplete="off" inputmode="url">
-          <button class="scan-profile-btn" id="scanProfileBtn">QUICK SCAN</button>
+        <span class="label">Source</span>
+        <div class="mode-tabs" id="modeTabs">
+          <button class="mode-tab active" data-mode="links" type="button">Reel links</button>
+          <button class="mode-tab" data-mode="connect" type="button">Connect IG</button>
         </div>
-        <p class="scan-help">Public Reel links work now. Profile/@username scan is beta and Instagram may rate-limit it.</p>
+      </div>
+
+      <div class="control-section" id="linksMode">
+        <span class="label">1 · Paste public Reel links (1–10)</span>
+        <div id="reelLinkRows">
+          <div class="link-scan reel-link-row">
+            <input class="instagram-input reel-link-input" type="text" maxlength="250" placeholder="instagram.com/reel/..." autocomplete="off" inputmode="url">
+          </div>
+        </div>
+        <button class="full-connect" id="addReelLink" type="button">+ Add another Reel</button>
+        <button class="scan-profile-btn" id="scanReelsBtn" style="width:100%;margin-top:9px;padding:12px">SCAN REEL LINKS</button>
+        <p class="scan-help">Each link is read individually. TrendDrop never treats 1–10 links as your full profile.</p>
         <p class="scan-error" id="scanError"></p>
-        <button class="full-connect" id="connectBtn">Need private insights? Full connection comes later →</button>
         <div class="account-preview" id="accountPreview">
           <div class="avatar" id="accountAvatar">TD</div>
           <div>
-            <div class="account-name" id="accountName">Demo creator</div>
-            <div class="account-meta" id="accountMeta">12 PUBLIC POSTS SCANNED</div>
-            <div class="public-badge" id="accountMode">PUBLIC DATA ONLY</div>
+            <div class="account-name" id="accountName">—</div>
+            <div class="account-meta" id="accountMeta">—</div>
+            <div class="public-badge" id="accountMode">—</div>
           </div>
           <div class="scan-state">✓</div>
         </div>
       </div>
 
+      <div class="control-section" id="connectMode" style="display:none">
+        <span class="label">Official Instagram connection</span>
+        <button class="connect-btn" id="connectBtn" type="button">Connect professional account →</button>
+        <p class="scan-help" id="connectHelp">Requires a Creator or Business Instagram account. Reach, saves, and retention insights require additional Meta App Review beyond basic profile access.</p>
+        <div class="account-preview" id="connectPreview">
+          <div class="avatar" id="connectAvatar">IG</div>
+          <div>
+            <div class="account-name" id="connectName">—</div>
+            <div class="account-meta" id="connectMeta">Official account insights</div>
+          </div>
+          <button class="remove-file" id="disconnectBtn" aria-label="Disconnect" style="margin-left:auto">✕</button>
+        </div>
+      </div>
+
       <div class="control-section">
         <span class="label">2 · Add your draft</span>
-        <input class="topic-input" id="topicInput" type="text" maxlength="90" placeholder="What is this Reel about?" autocomplete="off">
+        <input class="topic-input" id="topicInput" type="text" maxlength="90" placeholder="What is this Reel about? (optional)" autocomplete="off">
         <div class="upload-zone" id="uploadZone" role="button" tabindex="0" aria-label="Upload a draft video">
           <div class="upload-icon">↥</div>
           <div class="upload-title">Drop your Reel draft</div>
           <div class="upload-sub">MP4, MOV or WebM · up to 90 seconds</div>
         </div>
         <input id="videoInput" type="file" accept="video/mp4,video/quicktime,video/webm,video/*" hidden>
-        <button class="demo-link" id="demoBtn">or analyze a demo Reel →</button>
+        <button class="demo-link" id="demoBtn">or try sample demo data →</button>
         <div class="file-card" id="fileCard">
           <div class="file-thumb" id="fileThumb">▶</div>
           <div class="file-info">
@@ -315,7 +354,7 @@
           <button class="remove-file" id="removeFile" aria-label="Remove video">✕</button>
         </div>
         <button class="primary-btn" id="analyzeBtn" disabled>Analyze viral potential →</button>
-        <p class="privacy-note">Quick Scan uses public profile signals only. Upload analysis does not include private retention, saves or watch-time curves.</p>
+        <p class="privacy-note" id="videoAiNote">Video AI analysis requires an uploaded draft. Without one, TrendDrop shows public-link patterns only.</p>
       </div>
     </aside>
 
@@ -329,7 +368,7 @@
           <div>
             <div class="brain-orb"><span class="brain-glyph">V</span></div>
             <h2>Your Viral Brain is waiting</h2>
-            <p>It will compare your draft topic and length with the openings, captions and public formats already earning attention on the scanned account.</p>
+            <p>Scan Reel links or connect Instagram, then upload a draft. Uploaded drafts get real frame/audio AI analysis — nothing here is simulated.</p>
             <div class="empty-steps">
               <span class="empty-step">01 · Learn</span>
               <span class="empty-step">02 · Improve</span>
@@ -344,46 +383,29 @@
             <h2 id="analysisTitle">Reading your creator pattern…</h2>
             <p class="analysis-copy" id="analysisCopy">Matching this draft with the scanned profile's public winners.</p>
             <div class="analysis-list" id="analysisList">
-              <div class="analysis-item"><span class="analysis-mark">○</span>Reading the draft topic and duration</div>
-              <div class="analysis-item"><span class="analysis-mark">○</span>Finding winning public openings and captions</div>
-              <div class="analysis-item"><span class="analysis-mark">○</span>Comparing with the scanned profile's top posts</div>
-              <div class="analysis-item"><span class="analysis-mark">○</span>Building three Trial Reel variants</div>
+              <div class="analysis-item"><span class="analysis-mark">○</span>Uploading video</div>
+              <div class="analysis-item"><span class="analysis-mark">○</span>Reading speech and on-screen text</div>
+              <div class="analysis-item"><span class="analysis-mark">○</span>Finding hook, pacing and key moments</div>
+              <div class="analysis-item"><span class="analysis-mark">○</span>Building three rewritten versions</div>
             </div>
           </div>
         </div>
 
         <div class="results" id="results">
-          <div class="source-note" id="sourceNote">Built from public profile signals. Private retention, shares and saves are not available without Instagram permission.</div>
-          <div class="personal-strip">
-            <div class="signal-card primary">
-              <div class="signal-label">Your strongest pattern</div>
-              <div class="signal-value" id="strongestPattern">Bold statement + short-form payoff</div>
-            </div>
-            <div class="signal-card">
-              <div class="signal-label">Best length</div>
-              <div class="signal-value number" id="bestLength">—</div>
-            </div>
-            <div class="signal-card">
-              <div class="signal-label">Best opening</div>
-              <div class="signal-value" id="bestOpening">Visual-first</div>
-            </div>
-            <div class="signal-card">
-              <div class="signal-label">Share trigger</div>
-              <div class="signal-value" id="shareTrigger">Useful takeaway</div>
-            </div>
-          </div>
+          <div class="source-note" id="sourceNote">Built from what TrendDrop could actually read. Unavailable fields are labeled, not shown as zero.</div>
+          <div class="comparison-box" id="comparisonBox" style="display:none"></div>
 
           <div class="result-head">
             <div>
-              <h2>Three versions built for you</h2>
-              <p>Select one to see its exact edit plan.</p>
+              <h2 id="resultsHeading">Analysis</h2>
+              <p id="resultsSub">Select a version to see its exact edit plan.</p>
             </div>
-            <span class="model-tag" id="modelTag">PUBLIC MODEL · WAITING</span>
+            <span class="model-tag" id="modelTag">—</span>
           </div>
 
           <div class="variants" id="variants"></div>
 
-          <div class="edit-plan">
+          <div class="edit-plan" id="editPlanBox" style="display:none">
             <div class="edit-plan-head">
               <div class="edit-plan-title" id="editPlanTitle">Variant A · Hook-first cut</div>
               <span class="selected-badge">SELECTED FOR TRIAL</span>
@@ -444,56 +466,22 @@
 
 <script>
   const $ = id => document.getElementById(id);
-  let accountConnected = false;
+  let mode = 'links';
   let draftReady = false;
   let demoMode = false;
-  let videoDuration = 22;
+  let videoFile = null;
+  let videoDuration = null;
   let videoObjectUrl = null;
-  let selectedVariant = 0;
-  let currentTopic = 'a surprising creator lesson';
-  let profileScanData = null;
-
-  const variantBlueprints = [
-    {
-      name:'Hook-first cut',
-      hook: topic => profileScanData?.insights?.bestOpening === 'How-to'
-        ? `“Here is how ${topic} actually works.”`
-        : `“Stop scrolling — ${topic} is not what you think.”`,
-      score:92, hold:'78%', completion:'64%',
-      edits:[
-        ['00:00','<b>Open on the payoff.</b> Remove the greeting and show the strongest visual first.'],
-        ['00:01','Add a six-word headline in the upper safe zone.'],
-        ['00:04','Cut the pause and switch angle on the first proof point.'],
-        ['00:16','End on the opening frame to create a clean loop.']
-      ]
-    },
-    {
-      name:'Relatable meme cut',
-      hook: topic => `“POV: you finally understand ${topic}.”`,
-      score:87, hold:'73%', completion:'69%',
-      edits:[
-        ['00:00','<b>Lead with the reaction.</b> Put the context after the visual joke.'],
-        ['00:02','Use a familiar meme beat under the first line.'],
-        ['00:07','Add a pattern interrupt with a fast zoom and caption change.'],
-        ['00:18','Finish with a send-this-to-someone prompt.']
-      ]
-    },
-    {
-      name:'Fast payoff cut',
-      hook: topic => `“Here is ${topic} in ${Math.min(20,profileScanData?.insights?.bestLength || 15)} seconds.”`,
-      score:83, hold:'70%', completion:'76%',
-      edits:[
-        ['00:00','<b>Promise the result.</b> Set an explicit 15-second expectation.'],
-        ['00:03','Compress the explanation into three visual beats.'],
-        ['00:09','Replace the second example with on-screen proof.'],
-        ['00:14','Hold the result for one second before the loop.']
-      ]
-    }
-  ];
+  let selectedVersion = 0;
+  let currentTopic = '';
+  let lastReelScan = null;      // result of /api/reel-batch-scan
+  let lastVideoAnalysis = null; // result of /api/video-analyze
+  let igConnected = false;
+  let igProfile = null;
 
   function safeText(value){
     const node = document.createElement('div');
-    node.textContent = value;
+    node.textContent = value == null ? '' : String(value);
     return node.innerHTML;
   }
 
@@ -501,110 +489,161 @@
     $('toast').textContent = message;
     $('toast').classList.add('active');
     clearTimeout(window.toastTimer);
-    window.toastTimer = setTimeout(() => $('toast').classList.remove('active'), 1900);
-  }
-
-  function updateAnalyzeButton(){
-    $('analyzeBtn').disabled = !(accountConnected && draftReady);
+    window.toastTimer = setTimeout(() => $('toast').classList.remove('active'), 2200);
   }
 
   function compactNumber(value){
-    return new Intl.NumberFormat('en',{notation:'compact',maximumFractionDigits:1}).format(Number(value || 0));
+    if(value === null || value === undefined) return 'Unavailable';
+    return new Intl.NumberFormat('en',{notation:'compact',maximumFractionDigits:1}).format(Number(value));
   }
 
-  function setAccountPreview(data){
-    const profile = data.profile;
-    const singleReelMode = data.availability === 'single-reel-fallback';
-    const initials = (profile.fullName || profile.username || 'IG')
-      .split(/\s+/).slice(0,2).map(part => part[0]).join('').toUpperCase();
-    $('accountAvatar').textContent = initials || 'IG';
-    if(profile.profilePicture){
-      const image = document.createElement('img');
-      image.src = profile.profilePicture;
-      image.alt = '';
-      image.referrerPolicy = 'no-referrer';
-      image.addEventListener('error',() => $('accountAvatar').textContent = initials || 'IG');
-      $('accountAvatar').replaceChildren(image);
-    }
-    $('accountName').textContent = `@${profile.username}${profile.isVerified ? ' ✓' : ''}`;
-    $('accountMeta').textContent = singleReelMode
-      ? '1 REEL SCANNED · PROFILE STATS UNAVAILABLE'
-      : `${data.scannedPosts} RECENT POSTS · ${compactNumber(profile.followers)} FOLLOWERS`;
-    $('accountMode').textContent = singleReelMode ? 'SINGLE-REEL MODE' : 'PUBLIC PROFILE MODE';
-    $('accountPreview').classList.add('active');
-  }
+  // ---------- Mode tabs ----------
+  document.querySelectorAll('.mode-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      mode = tab.dataset.mode;
+      document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t === tab));
+      $('linksMode').style.display = mode === 'links' ? 'block' : 'none';
+      $('connectMode').style.display = mode === 'connect' ? 'block' : 'none';
+      if(mode === 'connect') refreshIgAccountStatus();
+    });
+  });
 
-  function applyProfileInsights(data){
-    const insights = data.insights || {};
-    $('strongestPattern').textContent = insights.strongestPattern || 'Public content pattern';
-    $('bestLength').textContent = insights.bestLength ? `${Math.round(insights.bestLength)}s` : '—';
-    $('bestOpening').textContent = insights.bestOpening || 'Visual-first';
-    $('shareTrigger').textContent = insights.shareTrigger || 'Useful takeaway';
-    $('modelTag').textContent = data.availability === 'single-reel-fallback'
-      ? 'REEL MODEL · 1 LINK'
-      : `PUBLIC MODEL · ${data.scannedPosts} RECENT POSTS`;
-    $('sourceNote').textContent = data.availability === 'single-reel-fallback'
-      ? `This is not your full account total. Instagram did not expose @${data.profile.username}'s profile list, so TrendDrop analyzed only the one Reel link you pasted. Follower count and the rest of your posts are unknown in this mode.`
-      : `Quick Scan read ${data.scannedPosts} public posts from @${data.profile.username}. It can use visible captions and engagement, but not private retention, shares or saves.`;
-  }
+  // ---------- Mode A: Reel links ----------
+  function reelLinkInputs(){ return [...document.querySelectorAll('.reel-link-input')]; }
 
-  async function scanInstagramProfile(){
-    const source = $('instagramInput').value.trim();
-    if(!source){
-      $('scanError').textContent = 'Paste your public profile, @username or Reel link first.';
+  function addReelLinkRow(){
+    if(reelLinkInputs().length >= 10){ showToast('TrendDrop reads up to 10 links at once'); return; }
+    const row = document.createElement('div');
+    row.className = 'link-scan reel-link-row';
+    row.innerHTML = `<input class="instagram-input reel-link-input" type="text" maxlength="250" placeholder="instagram.com/reel/..." autocomplete="off" inputmode="url"><button class="remove-link" type="button" aria-label="Remove link">✕</button>`;
+    row.querySelector('.remove-link').addEventListener('click', () => row.remove());
+    $('reelLinkRows').appendChild(row);
+  }
+  $('addReelLink').addEventListener('click', addReelLinkRow);
+
+  async function scanReelLinks(){
+    const urls = reelLinkInputs().map(input => input.value.trim()).filter(Boolean);
+    if(!urls.length){
+      $('scanError').textContent = 'Paste at least one public Reel link first.';
       $('scanError').classList.add('active');
-      $('instagramInput').focus();
       return;
     }
-
-    const button = $('scanProfileBtn');
-    const original = button.textContent;
+    const button = $('scanReelsBtn');
     button.disabled = true;
     button.textContent = 'SCANNING…';
     $('scanError').classList.remove('active');
 
     try{
-      const response = await fetch('/api/instagram-scan',{
+      const response = await fetch('/api/reel-batch-scan',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({url:source})
+        body:JSON.stringify({urls})
       });
       const data = await response.json().catch(() => ({}));
-      if(!response.ok) throw new Error(data.error || 'The public scan failed.');
-      profileScanData = data;
-      accountConnected = true;
-      setAccountPreview(data);
-      applyProfileInsights(data);
-      updateAnalyzeButton();
+      if(!response.ok) throw new Error(data.error || 'The scan failed.');
+      lastReelScan = data;
+      renderReelScanPreview(data);
+      if(data.failed && data.failed.length){
+        showToast(`${data.scannedCount} link${data.scannedCount===1?'':'s'} read, ${data.failed.length} failed`);
+      } else {
+        showToast(`${data.scannedCount} Reel link${data.scannedCount===1?'':'s'} read`);
+      }
       button.textContent = '✓ SCANNED';
-      showToast(`${data.scannedPosts} public posts learned`);
     }catch(error){
-      accountConnected = false;
-      profileScanData = null;
+      lastReelScan = null;
       $('accountPreview').classList.remove('active');
       $('scanError').textContent = error.message;
       $('scanError').classList.add('active');
-      button.textContent = original;
-      updateAnalyzeButton();
+      button.textContent = 'SCAN REEL LINKS';
     }finally{
       button.disabled = false;
     }
   }
+  $('scanReelsBtn').addEventListener('click', scanReelLinks);
 
-  $('scanProfileBtn').addEventListener('click',scanInstagramProfile);
-  $('instagramInput').addEventListener('keydown',event => {
-    if(event.key === 'Enter') scanInstagramProfile();
-  });
-  $('instagramInput').addEventListener('input',() => {
-    $('scanError').classList.remove('active');
-    if(profileScanData && $('instagramInput').value.trim() !== `@${profileScanData.profile.username}`){
-      $('scanProfileBtn').textContent = 'QUICK SCAN';
+  function renderReelScanPreview(data){
+    const first = data.reels[0];
+    $('accountAvatar').textContent = (first.username || 'IG').slice(0,2).toUpperCase();
+    $('accountName').textContent = data.reels.length === 1 ? `@${first.username}` : `${data.reels.length} Reels scanned`;
+    $('accountMeta').textContent = data.mode === 'single-reel'
+      ? '1 REEL SCANNED · PROFILE STATS UNAVAILABLE'
+      : `${data.scannedCount} REEL LINKS SCANNED`;
+    $('accountMode').textContent = data.mode === 'single-reel' ? 'SINGLE-REEL MODE' : 'MULTI-REEL COMPARISON';
+    $('accountPreview').classList.add('active');
+    renderLinkStatuses(data);
+  }
+
+  function renderLinkStatuses(data){
+    let statusEl = $('linkStatusList');
+    if(!statusEl){
+      statusEl = document.createElement('div');
+      statusEl.id = 'linkStatusList';
+      $('reelLinkRows').after(statusEl);
+    }
+    const rows = data.reels.map(r => `<div class="link-status ok">✓ ${safeText(r.username ? '@'+r.username : r.url)} — ${safeText(r.media.kind)}</div>`);
+    const failedRows = (data.failed || []).map(f => `<div class="link-status fail">✕ ${safeText(f.url)} — ${safeText(f.reason)}</div>`);
+    statusEl.innerHTML = rows.concat(failedRows).join('');
+  }
+
+  // ---------- Mode B: Official Instagram connection ----------
+  async function refreshIgAccountStatus(){
+    try{
+      const res = await fetch('/api/instagram-account');
+      const data = await res.json();
+      igConnected = Boolean(data.connected);
+      igProfile = data.profile || null;
+      if(igConnected && igProfile){
+        $('connectBtn').style.display = 'none';
+        $('connectPreview').classList.add('active');
+        $('connectName').textContent = `@${igProfile.username}`;
+        $('connectMeta').textContent = `${igProfile.accountType || 'Instagram account'} · basic profile connected`;
+      } else {
+        $('connectBtn').style.display = 'block';
+        $('connectPreview').classList.remove('active');
+      }
+    }catch{
+      igConnected = false;
+    }
+  }
+
+  $('connectBtn').addEventListener('click', async () => {
+    try{
+      const res = await fetch('/api/instagram-oauth-start');
+      const data = await res.json();
+      if(data.configured === false){
+        $('connectHelp').textContent = data.message + (data.missing ? ` Missing: ${data.missing.join(', ')}.` : '');
+        showToast('Official Instagram connection is not set up yet');
+        return;
+      }
+      window.location.href = data.authorizeUrl;
+    }catch{
+      showToast('Could not start the Instagram connection');
     }
   });
-  $('connectBtn').addEventListener('click',() => {
-    showToast('Full private-insights connection is the next phase');
+
+  $('disconnectBtn').addEventListener('click', async () => {
+    await fetch('/api/instagram-disconnect', {method:'POST'});
+    igConnected = false;
+    igProfile = null;
+    $('connectBtn').style.display = 'block';
+    $('connectPreview').classList.remove('active');
+    showToast('Instagram disconnected');
   });
 
+  // Handle redirect back from the OAuth callback
+  (function handleOauthReturn(){
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('ig_connect');
+    if(!status) return;
+    history.replaceState(null, '', window.location.pathname);
+    document.querySelector('[data-mode="connect"]').click();
+    if(status === 'success'){ showToast('Instagram connected'); refreshIgAccountStatus(); }
+    else if(status === 'denied') showToast('Instagram connection was cancelled');
+    else if(status === 'not_configured') showToast('Instagram connection is not configured on this server yet');
+    else showToast('Could not connect Instagram — try again');
+  })();
+
+  // ---------- Mode C: video upload + Gemini analysis ----------
   function openPicker(){ $('videoInput').click(); }
   $('uploadZone').addEventListener('click', openPicker);
   $('uploadZone').addEventListener('keydown', event => {
@@ -625,15 +664,17 @@
     if(file) useVideoFile(file);
   });
 
+  const ALLOWED_TYPES = new Set(['video/mp4','video/quicktime','video/webm']);
+
   function useVideoFile(file){
-    if(!file.type.startsWith('video/')){
-      showToast('Please choose a video file'); return;
+    if(!ALLOWED_TYPES.has(file.type)){
+      showToast('Please choose an MP4, MOV, or WebM file'); return;
     }
-    if(file.size > 250 * 1024 * 1024){
-      showToast('Keep the prototype upload under 250 MB'); return;
+    if(file.size > 200 * 1024 * 1024){
+      showToast('Keep uploads under 200 MB'); return;
     }
     demoMode = false;
-    draftReady = true;
+    videoFile = file;
     if(videoObjectUrl) URL.revokeObjectURL(videoObjectUrl);
     videoObjectUrl = URL.createObjectURL(file);
     const video = document.createElement('video');
@@ -642,13 +683,17 @@
     video.playsInline = true;
     video.preload = 'metadata';
     video.addEventListener('loadedmetadata', () => {
-      videoDuration = Number.isFinite(video.duration) ? video.duration : 22;
-      $('fileMeta').textContent = `${formatBytes(file.size)} · ${Math.round(videoDuration)}s`;
+      videoDuration = Number.isFinite(video.duration) ? video.duration : null;
+      if(videoDuration && videoDuration > 90){
+        showToast('Video AI supports up to 90 seconds — this file is longer');
+      }
+      $('fileMeta').textContent = `${formatBytes(file.size)} · ${videoDuration ? Math.round(videoDuration)+'s' : 'duration unknown'}`;
     });
     $('fileThumb').replaceChildren(video);
     $('fileName').textContent = file.name;
     $('fileMeta').textContent = `${formatBytes(file.size)} · reading duration…`;
     $('fileCard').classList.add('active');
+    draftReady = true;
     updateAnalyzeButton();
   }
 
@@ -657,42 +702,10 @@
     return `${(bytes/(1024*1024)).toFixed(1)} MB`;
   }
 
-  function loadDemoAccount(){
-    profileScanData = {
-      profile:{username:'demo.creator',fullName:'Demo creator',followers:18400,isVerified:false,profilePicture:''},
-      scannedPosts:12,
-      insights:{
-        strongestPattern:'Contrarian opening + Reel payoff',
-        bestLength:18,
-        bestOpening:'Contrarian',
-        shareTrigger:'Relatable moment',
-        topTopic:'switching AI tools wastes your memory'
-      }
-    };
-    accountConnected = true;
-    setAccountPreview(profileScanData);
-    applyProfileInsights(profileScanData);
-    $('instagramInput').value = '@demo.creator';
-    $('scanProfileBtn').textContent = 'DEMO';
-  }
-
-  $('demoBtn').addEventListener('click', () => {
-    demoMode = true;
-    draftReady = true;
-    videoDuration = 21;
-    if(!$('topicInput').value.trim()) $('topicInput').value = 'why switching between AI tools wastes your memory';
-    $('fileThumb').textContent = '▶';
-    $('fileName').textContent = 'demo-creator-reel.mp4';
-    $('fileMeta').textContent = '8.4 MB · 21s · demo';
-    $('fileCard').classList.add('active');
-    if(!accountConnected) loadDemoAccount();
-    updateAnalyzeButton();
-    showToast('Demo profile and draft ready');
-  });
-
   $('removeFile').addEventListener('click', () => {
     draftReady = false;
     demoMode = false;
+    videoFile = null;
     $('videoInput').value = '';
     $('fileCard').classList.remove('active');
     $('fileThumb').textContent = '▶';
@@ -700,104 +713,232 @@
     updateAnalyzeButton();
   });
 
+  $('demoBtn').addEventListener('click', () => {
+    demoMode = true;
+    draftReady = true;
+    $('fileThumb').textContent = '▶';
+    $('fileName').textContent = 'sample-demo-reel.mp4 (SAMPLE DEMO DATA)';
+    $('fileMeta').textContent = 'No file uploaded — sample demo data only';
+    $('fileCard').classList.add('active');
+    updateAnalyzeButton();
+    showToast('Sample demo data loaded — no real video analyzed');
+  });
+
+  function updateAnalyzeButton(){
+    $('analyzeBtn').disabled = !draftReady;
+  }
+
   $('analyzeBtn').addEventListener('click', runAnalysis);
 
-  function runAnalysis(){
-    currentTopic = $('topicInput').value.trim() || profileScanData?.insights?.topTopic || 'this creator idea';
+  async function runAnalysis(){
+    currentTopic = $('topicInput').value.trim();
     $('emptyState').style.display = 'none';
     $('results').classList.remove('active');
     $('analysisState').classList.add('active');
     $('workspaceStatus').textContent = 'ANALYZING DRAFT';
     $('workspaceStatus').classList.remove('ready');
-    const items = [...document.querySelectorAll('.analysis-item')];
-    items.forEach(item => { item.classList.remove('done'); item.querySelector('.analysis-mark').textContent='○'; });
-    const stages = [
-      [18,'Reading your draft setup…','Measuring the topic and duration supplied for this Reel.'],
-      [42,'Finding public winners…','Ranking visible posts by their public engagement signals.'],
-      [68,'Comparing creator patterns…','Matching this draft with the openings and captions used by top posts.'],
-      [88,'Building three variants…','Creating different hooks, pacing and payoff structures.'],
-      [100,'Your test is ready','Ranking each cut for personal fit, hold and completion.']
-    ];
-    let index = 0;
-    const advance = () => {
-      const [progress,title,copy] = stages[index];
-      $('scanOrb').style.setProperty('--progress',`${progress}%`);
-      $('scanPercent').textContent = `${progress}%`;
-      $('analysisTitle').textContent = title;
-      $('analysisCopy').textContent = copy;
-      if(index > 0 && items[index-1]){
-        items[index-1].classList.add('done');
-        items[index-1].querySelector('.analysis-mark').textContent='✓';
+    resetAnalysisSteps();
+
+    if(demoMode){
+      await runDemoAnalysis();
+      return;
+    }
+
+    try{
+      setStage(0,5,'Uploading video…','Sending your draft to the AI video analyzer.');
+
+      const initRes = await fetch('/api/video-upload-init',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({fileSizeBytes:videoFile.size, mimeType:videoFile.type, displayName:videoFile.name})
+      });
+      const initData = await initRes.json();
+      if(initData.configured === false){
+        showAiNotConfigured();
+        return;
       }
-      index++;
-      if(index < stages.length) setTimeout(advance,520);
-      else setTimeout(showResults,520);
-    };
-    advance();
+      if(!initRes.ok || !initData.uploadUrl) throw new Error(initData.error || 'Could not start the upload.');
+
+      const uploadRes = await fetch(initData.uploadUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Length': String(videoFile.size),
+          'X-Goog-Upload-Offset': '0',
+          'X-Goog-Upload-Command': 'upload, finalize'
+        },
+        body: videoFile
+      });
+      if(!uploadRes.ok) throw new Error('The video upload failed partway through.');
+      const uploaded = await uploadRes.json();
+      const fileUri = uploaded?.file?.uri;
+      const mimeType = uploaded?.file?.mimeType || videoFile.type;
+      if(!fileUri) throw new Error('The AI provider did not confirm the upload.');
+
+      setStage(1,5,'Reading speech and on-screen text…','Gemini is watching the full video.');
+      setStage(2,5,'Finding hook, pacing and key moments…','Detecting jokes, pauses, and pattern interrupts.');
+
+      const analyzeRes = await fetch('/api/video-analyze',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({fileUri, mimeType, topic: currentTopic})
+      });
+      const analyzeData = await analyzeRes.json();
+      if(analyzeData.configured === false){ showAiNotConfigured(); return; }
+      if(!analyzeRes.ok) throw new Error(analyzeData.error || 'Video analysis failed.');
+
+      setStage(3,5,'Building three rewritten versions…','Turning the analysis into hook-first, meme, and fast-payoff cuts.');
+      lastVideoAnalysis = analyzeData.analysis;
+      setStage(4,5,'Done','Real analysis complete.');
+      setTimeout(() => showResults('video'), 400);
+    }catch(error){
+      $('analysisState').classList.remove('active');
+      $('emptyState').style.display = 'grid';
+      showToast(error.message || 'Analysis failed');
+    }
   }
 
-  function adjustedScore(base,index){
-    const durationFit = videoDuration >= 10 && videoDuration <= 30 ? 2 : videoDuration > 60 ? -6 : -2;
-    const topicFit = currentTopic.length >= 8 ? 1 : -2;
-    return Math.max(55,Math.min(96,base + durationFit + topicFit - (index === 2 && videoDuration > 30 ? 2 : 0)));
-  }
-
-  function showResults(){
+  function showAiNotConfigured(){
     $('analysisState').classList.remove('active');
-    $('workspaceStatus').textContent = '3 VARIANTS READY';
+    $('emptyState').style.display = 'grid';
+    $('workspaceStatus').textContent = 'VIDEO AI NOT CONFIGURED';
+    showToast('Video AI is not configured on this server (missing GEMINI_API_KEY)');
+  }
+
+  async function runDemoAnalysis(){
+    const stages = [
+      [20,'Uploading sample video…','Sample demo data — no real video analyzed.'],
+      [45,'Reading speech and on-screen text…','Sample demo data.'],
+      [70,'Finding hook, pacing and key moments…','Sample demo data.'],
+      [100,'Building three rewritten versions…','Sample demo data.']
+    ];
+    for(let i=0;i<stages.length;i++){
+      setStage(i, stages.length, stages[i][1], stages[i][2]);
+      await new Promise(r => setTimeout(r, 420));
+    }
+    lastVideoAnalysis = DEMO_ANALYSIS;
+    showResults('demo');
+  }
+
+  function resetAnalysisSteps(){
+    document.querySelectorAll('.analysis-item').forEach(item => {
+      item.classList.remove('done');
+      item.querySelector('.analysis-mark').textContent='○';
+    });
+  }
+
+  function setStage(index,total,title,copy){
+    const progress = Math.round(((index+1)/total)*100);
+    $('scanOrb').style.setProperty('--progress',`${progress}%`);
+    $('scanPercent').textContent = `${progress}%`;
+    $('analysisTitle').textContent = title;
+    $('analysisCopy').textContent = copy;
+    const items = [...document.querySelectorAll('.analysis-item')];
+    for(let i=0;i<index && i<items.length;i++){
+      items[i].classList.add('done');
+      items[i].querySelector('.analysis-mark').textContent = '✓';
+    }
+  }
+
+  // ---------- Results rendering ----------
+  function strengthBadge(strength){
+    const cls = String(strength||'').toLowerCase();
+    const label = strength || 'Estimated';
+    return `<span class="strength-badge ${cls}">${safeText(label)}</span>`;
+  }
+
+  function showResults(source){
+    $('analysisState').classList.remove('active');
+    $('workspaceStatus').textContent = source === 'demo' ? 'SAMPLE DEMO DATA' : 'ANALYSIS READY';
     $('workspaceStatus').classList.add('ready');
-    renderVariants();
-    selectVariant(0);
+    renderComparisonBox();
+    renderVideoResults(source);
     $('results').classList.add('active');
   }
 
-  function renderVariants(){
-    $('variants').innerHTML = variantBlueprints.map((variant,index) => {
-      const score = adjustedScore(variant.score,index);
-      return `<article class="variant ${index===0?'selected':''}" data-index="${index}">
-        ${index===0?'<span class="best-tag">BEST FIT</span>':''}
-        <div class="variant-letter">${String.fromCharCode(65+index)}</div>
-        <div class="variant-name">${safeText(variant.name)}</div>
-        <div class="variant-hook">${safeText(variant.hook(currentTopic))}</div>
-        <div class="score-line">
-          <div class="score">${score}<small>/100</small></div>
-          <div class="score-bars"><div class="mini-track"><div class="mini-fill" style="width:${score}%"></div></div><div class="mini-track"><div class="mini-fill" style="width:${Math.max(40,score-8)}%"></div></div></div>
-        </div>
-        <div class="variant-metrics">
-          <div class="metric"><b>${variant.hold}</b><span>3s hold</span></div>
-          <div class="metric"><b>${variant.completion}</b><span>completion</span></div>
-        </div>
-      </article>`;
-    }).join('');
-    document.querySelectorAll('.variant').forEach(card => card.addEventListener('click', () => selectVariant(Number(card.dataset.index))));
+  function renderComparisonBox(){
+    const box = $('comparisonBox');
+    if(!lastReelScan || !lastReelScan.comparison){
+      box.style.display = 'none';
+      return;
+    }
+    const c = lastReelScan.comparison;
+    box.style.display = 'block';
+    box.innerHTML = `<b>Reel link pattern (${safeText(lastReelScan.disclosure)})</b><br>
+      ${safeText(c.repeat)}<br>
+      ${c.stop ? safeText(c.stop)+'<br>' : ''}
+      ${c.strongestSuppliedReel ? `Strongest supplied Reel by visible likes: <a href="${safeText(c.strongestSuppliedReel.url)}" target="_blank" rel="noopener" style="color:var(--cyan)">${safeText(c.strongestSuppliedReel.url)}</a> (${compactNumber(c.strongestSuppliedReel.likes)} likes)<br>` : ''}
+      <span style="color:var(--muted-2)">${safeText(c.strongestReelBasis)}</span>`;
   }
 
-  function selectVariant(index){
-    selectedVariant = index;
+  function renderVideoResults(source){
+    const analysis = lastVideoAnalysis;
+    if(!analysis){
+      $('resultsHeading').textContent = 'Reel link results';
+      $('resultsSub').textContent = 'Upload a draft to get AI hook, pacing, and rewritten-version analysis.';
+      $('modelTag').textContent = 'PUBLIC LINKS ONLY';
+      $('variants').innerHTML = '';
+      $('editPlanBox').style.display = 'none';
+      return;
+    }
+
+    $('resultsHeading').textContent = source === 'demo' ? 'Sample demo analysis' : 'Your draft, analyzed';
+    $('resultsSub').textContent = 'Select a version to see its exact shot-by-shot edit plan.';
+    $('modelTag').textContent = source === 'demo' ? 'SAMPLE DEMO DATA' : 'GEMINI 2.5 FLASH · REAL ANALYSIS';
+    $('sourceNote').textContent = source === 'demo'
+      ? 'This is sample demo data — no uploaded video was analyzed.'
+      : `Hook: ${strengthBadge(analysis.hook.strength)} — ${analysis.hook.why}`;
+
+    const moments = (analysis.moments || []).slice(0,6).map(m =>
+      `<span class="moment-chip">${safeText(m.type)} @ ${Math.round(m.startSeconds)}s</span>`
+    ).join('');
+    if(moments){
+      $('sourceNote').innerHTML += `<div style="margin-top:8px">${moments}</div>`;
+    }
+
+    $('variants').innerHTML = (analysis.versions || []).map((v,index) => `
+      <article class="variant ${index===0?'selected':''}" data-index="${index}">
+        ${index===0?'<span class="best-tag">SUGGESTED</span>':''}
+        <div class="variant-letter">${String.fromCharCode(65+index)}</div>
+        <div class="variant-name">${safeText(v.name)}</div>
+        <div class="variant-hook">"${safeText(v.openingLine)}"</div>
+        <div class="variant-metrics">
+          <div class="metric"><b>${safeText(v.cta || '—')}</b><span>suggested cta</span></div>
+        </div>
+      </article>`).join('');
+    document.querySelectorAll('.variant').forEach(card => card.addEventListener('click', () => selectVersion(Number(card.dataset.index))));
+    if((analysis.versions||[]).length) selectVersion(0);
+  }
+
+  function selectVersion(index){
+    selectedVersion = index;
     document.querySelectorAll('.variant').forEach((card,i) => card.classList.toggle('selected',i===index));
-    const variant = variantBlueprints[index];
-    $('editPlanTitle').textContent = `Variant ${String.fromCharCode(65+index)} · ${variant.name}`;
-    $('editList').innerHTML = variant.edits.map(([time,copy]) => `<div class="edit-item"><span class="timecode">${time}</span><span class="edit-text">${copy}</span></div>`).join('');
+    const v = lastVideoAnalysis.versions[index];
+    $('editPlanBox').style.display = 'block';
+    $('editPlanTitle').textContent = `Variant ${String.fromCharCode(65+index)} · ${v.name}`;
+    $('editList').innerHTML = (v.editPlan||[]).map(e => `<div class="edit-item"><span class="timecode">${safeText(e.timecode)}</span><span class="edit-text">${safeText(e.instruction)}</span></div>`).join('')
+      + `<div class="edit-item" style="grid-column:1/-1"><span class="timecode">CAPTION</span><span class="edit-text">${safeText(v.caption)}</span></div>`
+      + `<div class="edit-item" style="grid-column:1/-1"><span class="timecode">WHY</span><span class="edit-text">${safeText(v.whyItMayPerform)}</span></div>`;
   }
 
   $('downloadBrief').addEventListener('click', () => {
-    const variant = variantBlueprints[selectedVariant];
+    if(!lastVideoAnalysis){ showToast('Nothing to download yet'); return; }
+    const v = lastVideoAnalysis.versions[selectedVersion];
     const brief = [
       'TRENDDROP VIRAL BRAIN — EDIT BRIEF',
-      `Topic: ${currentTopic}`,
-      `Selected: Variant ${String.fromCharCode(65+selectedVariant)} — ${variant.name}`,
-      `Personal fit score: ${adjustedScore(variant.score,selectedVariant)}/100`,
-      `Hook: ${variant.hook(currentTopic)}`,
+      currentTopic ? `Topic: ${currentTopic}` : '',
+      `Hook strength: ${lastVideoAnalysis.hook.strength} — ${lastVideoAnalysis.hook.why}`,
+      `Selected: Variant ${String.fromCharCode(65+selectedVersion)} — ${v.name}`,
+      `Opening line: ${v.openingLine}`,
       '',
       'EDIT PLAN',
-      ...variant.edits.map(([time,copy]) => `${time} — ${copy.replace(/<[^>]+>/g,'')}`),
+      ...(v.editPlan||[]).map(e => `${e.timecode} — ${e.instruction}`),
       '',
-      'TRIAL SUCCESS METRICS',
-      'Primary: shares per 1,000 real views',
-      'Secondary: 3-second hold and completion rate',
-      'Window: first 24–72 hours',
-      'Method: Instagram Trial Reel shown to non-followers; no artificial engagement.'
-    ].join('\n');
+      `Caption: ${v.caption}`,
+      `CTA: ${v.cta}`,
+      `Suggested ending: ${lastVideoAnalysis.suggestedEnding || '—'}`,
+      '',
+      'This brief reflects real AI analysis of the uploaded video. No performance percentages are guaranteed.'
+    ].filter(Boolean).join('\n');
     const blob = new Blob([brief],{type:'text/plain'});
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -819,19 +960,35 @@
   }
 
   $('trialBtn').addEventListener('click', () => {
-    const variant = variantBlueprints[selectedVariant];
-    $('modalSummary').textContent = `Variant ${String.fromCharCode(65+selectedVariant)} — ${variant.name} is ready for a real-audience Trial Reel experiment.`;
+    if(!lastVideoAnalysis){ showToast('Analyze a draft first'); return; }
+    const v = lastVideoAnalysis.versions[selectedVersion];
+    $('modalSummary').textContent = `Variant ${String.fromCharCode(65+selectedVersion)} — ${v.name} is ready for a real-audience Trial Reel experiment.`;
     $('trialModal').classList.add('active');
   });
   $('closeModal').addEventListener('click', () => $('trialModal').classList.remove('active'));
   $('backendBtn').addEventListener('click', () => {
     $('trialModal').classList.remove('active');
-    showToast('Frontend ready for Instagram backend');
+    showToast('Trial Reel publishing requires Instagram content-publish permission (Meta App Review)');
   });
   $('trialModal').addEventListener('click', event => {
     if(event.target === $('trialModal')) $('trialModal').classList.remove('active');
   });
   $('proBtn').addEventListener('click', () => showToast('Pro checkout connection is next'));
+
+  const DEMO_ANALYSIS = {
+    transcript: '[Sample demo data] "Okay so nobody told me this before I started..."',
+    hook: { whatHappens: 'Creator opens mid-sentence with a confession-style line.', strength: 'Moderate', why: 'Sample demo data — illustrative only.' },
+    moments: [
+      { startSeconds: 2, endSeconds: 4, type: 'confusion', description: 'Sample demo moment.' },
+      { startSeconds: 9, endSeconds: 11, type: 'realization', description: 'Sample demo moment.' }
+    ],
+    suggestedEnding: 'Sample demo data — loop back to the opening line.',
+    versions: [
+      { name:'Hook-first', openingLine:'[Sample] "Stop — nobody told me this."', editPlan:[{timecode:'00:00',instruction:'Sample demo instruction.'}], caption:'[Sample demo caption]', cta:'[Sample demo CTA]', whyItMayPerform:'Sample demo data — illustrative only.' },
+      { name:'Relatable/meme', openingLine:'[Sample] "POV: you just found out."', editPlan:[{timecode:'00:00',instruction:'Sample demo instruction.'}], caption:'[Sample demo caption]', cta:'[Sample demo CTA]', whyItMayPerform:'Sample demo data — illustrative only.' },
+      { name:'Fast-payoff', openingLine:'[Sample] "Here it is in 10 seconds."', editPlan:[{timecode:'00:00',instruction:'Sample demo instruction.'}], caption:'[Sample demo caption]', cta:'[Sample demo CTA]', whyItMayPerform:'Sample demo data — illustrative only.' }
+    ]
+  };
 </script>
 </body>
 </html>
