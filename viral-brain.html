@@ -685,7 +685,11 @@
     video.addEventListener('loadedmetadata', () => {
       videoDuration = Number.isFinite(video.duration) ? video.duration : null;
       if(videoDuration && videoDuration > 90){
-        showToast('Video AI supports up to 90 seconds — this file is longer');
+        showToast(`This video is ${Math.round(videoDuration)}s — Video AI supports up to 90s. Trim it and re-upload.`);
+        draftReady = false;
+        updateAnalyzeButton();
+        $('fileMeta').textContent = `${formatBytes(file.size)} · ${Math.round(videoDuration)}s — too long, max 90s`;
+        return;
       }
       $('fileMeta').textContent = `${formatBytes(file.size)} · ${videoDuration ? Math.round(videoDuration)+'s' : 'duration unknown'}`;
     });
@@ -757,7 +761,7 @@
         showAiNotConfigured();
         return;
       }
-      if(!initRes.ok || !initData.uploadUrl) throw new Error(initData.error || 'Could not start the upload.');
+      if(!initRes.ok || !initData.uploadUrl) throw new Error(initData.detail ? `${initData.error} (${initData.detail})` : (initData.error || 'Could not start the upload.'));
 
       const uploadRes = await fetch(initData.uploadUrl, {
         method: 'POST',
@@ -793,7 +797,13 @@
     }catch(error){
       $('analysisState').classList.remove('active');
       $('emptyState').style.display = 'grid';
-      showToast(error.message || 'Analysis failed');
+      $('emptyState').innerHTML = `<div>
+        <div class="brain-orb"><span class="brain-glyph">!</span></div>
+        <h2>Analysis failed</h2>
+        <p style="color:#ff8fae">${safeText(error.message || 'Something went wrong.')}</p>
+        <button class="secondary-btn" style="margin-top:16px" onclick="location.reload()">Try again</button>
+      </div>`;
+      showToast('Analysis failed — see details below');
     }
   }
 

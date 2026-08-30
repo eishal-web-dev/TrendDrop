@@ -60,7 +60,11 @@ module.exports = async function handler(req, res) {
 
     if (!startRes.ok) {
       const errBody = await startRes.text().catch(() => '');
-      return send(res, 502, { error: 'Could not start the video upload with the AI provider.', detail: errBody.slice(0, 300) });
+      console.error('[video-upload-init] Gemini start-upload failed', startRes.status, errBody.slice(0, 500));
+      return send(res, 502, {
+        error: 'Could not start the video upload with the AI provider.',
+        detail: `HTTP ${startRes.status}: ${errBody.slice(0, 300)}`,
+      });
     }
 
     const uploadUrl = startRes.headers.get('x-goog-upload-url');

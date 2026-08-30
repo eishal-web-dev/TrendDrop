@@ -97,7 +97,13 @@ function useVideoFile(file) {
   video.src = url; video.muted = true; video.playsInline = true; video.preload = 'metadata';
   video.addEventListener('loadedmetadata', () => {
     const duration = Number.isFinite(video.duration) ? video.duration : null;
-    if (duration && duration > 90) showToast('Meme Remix supports up to 90 seconds — this file is longer');
+    if (duration && duration > 90) {
+      showToast(`This video is ${Math.round(duration)}s — Meme Remix supports up to 90s. Trim it and re-upload.`);
+      videoFile = null;
+      $('makeViralBtn').disabled = true;
+      $('fileMeta').textContent = `${formatBytes(file.size)} · ${Math.round(duration)}s — too long, max 90s`;
+      return;
+    }
     $('fileMeta').textContent = `${formatBytes(file.size)} · ${duration ? Math.round(duration) + 's' : 'duration unknown'}`;
   });
   $('fileThumb').replaceChildren(video);
@@ -237,7 +243,7 @@ async function runPipeline() {
     });
     const initData = await initRes.json();
     if (initData.configured === false) return showAiNotConfigured();
-    if (!initRes.ok || !initData.uploadUrl) throw new Error(initData.error || 'Could not start the upload.');
+    if (!initRes.ok || !initData.uploadUrl) throw new Error(initData.detail ? `${initData.error} (${initData.detail})` : (initData.error || 'Could not start the upload.'));
     if (cancelRequested) return backToEmpty();
 
     const uploadRes = await fetch(initData.uploadUrl, {
