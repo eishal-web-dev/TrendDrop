@@ -1,0 +1,36 @@
+name: Apply Gemini upload granularity fix
+
+on:
+  push:
+    paths:
+      - '.github/workflows/run-gemini-granularity-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Apply patch
+        run: python .github/scripts/fix_gemini_granularity.py
+      - name: Verify
+        run: |
+          node --check api/video-upload-init.js
+          node --check api/video-upload-query.js
+          node --check js/meme-remix-app.js
+          grep -q 'chunkGranularityBytes' api/video-upload-init.js
+          grep -q '/api/video-upload-query' js/meme-remix-app.js
+          grep -q '/api/video-upload-query' viral-brain.html
+          test ! -e api/video-upload-chunk.js
+      - name: Commit
+        run: |
+          git config user.name 'TrendDrop Gemini Upload Fix'
+          git config user.email 'actions@github.com'
+          git add -A
+          git commit -m 'Use Gemini 8MB resumable chunks with progress queries'
+          git push origin HEAD:main
