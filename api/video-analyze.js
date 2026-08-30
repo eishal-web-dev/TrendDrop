@@ -1,6 +1,6 @@
 const { send, parseBody, rateLimit, clientKey, withTimeout } = require('./_lib/http');
 
-const MODEL = 'gemini-2.5-flash';
+const MODEL = process.env.GEMINI_VIDEO_MODEL || 'gemini-3.6-flash';
 
 // One structured schema covers both Viral Brain's "improve my draft" flow
 // and Meme Remix's "find edit moments" flow, so both features share one
